@@ -1,0 +1,14 @@
+applet.id: d29f1599-d31a-4d31-9a63-01b67e5b5a48
+applet.name: TEE_8442_0871
+applet.vendor: Intel
+applet.version: 1.0
+security.version: 1
+applet.heap.size: 50000
+applet.platform: CSE
+applet.api.level: 7
+applet.description: This is the TEE_8442_0871 applet
+applet.entry_class: TEE_8442_0871.TEE_8442_0871
+applet.flash.quota: 0
+applet.debug.enable: true
+applet.written.by.intel: true
+applet.access.control: 10
