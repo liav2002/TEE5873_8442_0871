@@ -45,24 +45,16 @@ public class TEE_8442_0871 extends IntelApplet {
 			DebugPrint.printBuffer(request);
 		}
 		
-		final byte[] myResponse = { 'O', 'K' };
-
-		/*
-		 * To return the response data to the command, call the setResponse
-		 * method before returning from this method. 
-		 * Note that calling this method more than once will 
-		 * reset the response data previously set.
-		 */
-		setResponse(myResponse, 0, myResponse.length);
-
-		/*
-		 * In order to provide a return value for the command, which will be
-		 * delivered to the SW application communicating with the Trusted Application,
-		 * setResponseCode method should be called. 
-		 * Note that calling this method more than once will reset the code previously set. 
-		 * If not set, the default response code that will be returned to SW application is 0.
-		 */
-		setResponseCode(commandId);
+		
+		switch (commandId) {
+			case 1: // add...
+				int[] nums = getIntegers(request);
+				int resp = nums[0] + nums[1];
+				sendIntResp(resp);
+				break;
+			default:
+				break;
+		}
 
 		/*
 		 * The return value of the invokeCommand method is not guaranteed to be
@@ -72,7 +64,55 @@ public class TEE_8442_0871 extends IntelApplet {
 		 */
 		return APPLET_SUCCESS;
 	}
-
+	
+	public void sendIntResp(int resp) {
+		byte[] bytesArray = new byte[4];
+		
+		for (int i = 0; i < bytesArray.length; ++i)
+		{
+			bytesArray[bytesArray.length - i - 1] = (byte) (resp & 0xFF);
+			resp >>= 8;
+		}
+		
+		/*
+         * To return the response data to the command, call the setResponse
+         * method before returning from this method.
+         * Note that calling this method more than once will
+         * reset the response data previously set.
+         */
+        setResponse(bytesArray, 0, bytesArray.length);
+        
+        /*
+         * In order to provide a return value for the command, which will be
+         * delivered to the SW application communicating with the Trusted Application,
+         * setResponseCode method should be called.
+         * Note that calling this method more than once will reset the code previously set.
+         * If not set, the default response code that will be returned to SW application is 0.
+         */
+        setResponseCode(0); //can return an error by returning a 1, or 2...
+	}
+	
+	public int[] getIntegers(byte[] data) {
+		final int integerBytes = 4;
+		int arraySize = (int) (data.length / integerBytes);
+		int[] numbersArray = new int[arraySize];
+		
+		// Casting bytes value to integers.
+		for (int i = 0; i < arraySize; ++i)
+		{
+			for (int j = 0; j < integerBytes; ++j)
+			{
+				numbersArray[i] = (numbersArray[i] << 8) + (data[j + i * integerBytes] & 0xFF);
+			}
+		}
+		
+		// Print result for debug
+		System.out.println("nums: ");
+		for (int n: numbersArray)
+			System.out.println(n);
+		
+		return numbersArray;
+	}
 	/**
 	 * This method will be called by the VM when the session being handled by
 	 * this Trusted Application instance is being closed 

@@ -2,11 +2,14 @@
 using System;
 using System.Text;
 using System.IO;
+using System.Linq;
 
 namespace TEE_8442_0871Host
 {
     class Program
     {
+        static JhiSession session;
+        static Jhi jhi; 
         static void Main(string[] args)
         {
 #if AMULET
@@ -22,10 +25,7 @@ namespace TEE_8442_0871Host
             // The JHI.dll was placed in the bin\Amulet folder during project build.
             Jhi.DisableDllValidation = true;
 #endif
-
-            Jhi jhi = Jhi.Instance;
-            JhiSession session;
-
+            jhi = Jhi.Instance;
             // This is the UUID of this Trusted Application (TA).
             //The UUID is the same value as the applet.id field in the Intel(R) DAL Trusted Application manifest.
             string appletID = "d29f1599-d31a-4d31-9a63-01b67e5b5a48";
@@ -45,13 +45,9 @@ namespace TEE_8442_0871Host
             jhi.CreateSession(appletID, JHI_SESSION_FLAGS.None, initBuffer, out session);
 
             // Send and Receive data to/from the Trusted Application
-            byte[] sendBuff = UTF32Encoding.UTF8.GetBytes("Hello"); // A message to send to the TA
-            byte[] recvBuff = new byte[2000]; // A buffer to hold the output data from the TA
-            int responseCode; // The return value that the TA provides using the IntelApplet.setResponseCode method
-            int cmdId = 1; // The ID of the command to be performed by the TA
-            Console.WriteLine("Performing send and receive operation.");
-            jhi.SendAndRecv2(session, cmdId, sendBuff, ref recvBuff, out responseCode);
-            Console.Out.WriteLine("Response buffer is " + UTF32Encoding.UTF8.GetString(recvBuff));
+            Console.Write("Fibonacci sequence up to 10th  element:\n");
+            int res = Fib(10);
+            Console.WriteLine("\n");
 
             // Close the session
             Console.WriteLine("Closing the session.");
@@ -63,6 +59,68 @@ namespace TEE_8442_0871Host
 
             Console.WriteLine("Press Enter to finish.");
             Console.Read();
+        }
+
+        static int Add(int a, int b)
+        {
+            byte[] aBytes = BitConverter.GetBytes(a);
+            Array.Reverse(aBytes);
+
+            byte[] bBytes = BitConverter.GetBytes(b);
+            Array.Reverse(bBytes);
+
+            byte[] sendBuff = aBytes.Concat(bBytes).ToArray(); //sendBuff includes both numbers
+
+            // A buffer to hold the output data from the TA
+            //the size of 2000 can change by itself...
+            byte[] recvBuff = new byte[2000];
+
+            // The return value that the TA provides using the IntelApplet.setResponseCode method
+            int responseCode;
+
+            // The ID of the command to be performed by the TA
+            int cmdId = 1; // 1 stands for Add
+            
+            Console.Write("Performing send and receive operation...");
+            jhi.SendAndRecv2(session, cmdId, sendBuff, ref recvBuff, out responseCode);
+            //the "sendBuff" becomes the "request" in eclipse...
+            //send "recvBuff" by reference... and it changes acc to what is done in eclipse
+
+            Array.Reverse(recvBuff);
+            int res = BitConverter.ToInt32(recvBuff, 0);
+
+            return res;
+        }
+
+        static int Fib(int n)
+        {
+            int a = 0;
+            int b = 1;
+            int c = 0;
+
+            if (n > 0)
+            {
+                --n;
+                Console.WriteLine("Fib iteration 1: " + a);
+            }
+            if (n > 0)
+            {
+                --n;
+                Console.WriteLine("Fib iteration 2: " + b);
+            }
+            for (int i = 0; i < n; ++i)
+            {
+                if(i > 0)
+                {
+                    a = b;
+                    b = c;
+                }
+                Console.Write("fib iteration " + (i + 3) + ":");
+                c = Add(a, b);
+                Console.WriteLine(c);
+            }
+
+            return c;
         }
     }
 }
