@@ -8,7 +8,7 @@ applet.platform: CSE
 applet.api.level: 7
 applet.description: This is the TEE_8442_0871 applet
 applet.entry_class: TEE_8442_0871.TEE_8442_0871
-applet.flash.quota: 0
+applet.flash.quota: 1024
 applet.debug.enable: true
 applet.written.by.intel: true
-applet.access.control: 10
+applet.access.control: 32

@@ -1,5 +1,6 @@
 package TEE_8442_0871;
 
+import com.intel.crypto.Random;
 import com.intel.util.*;
 
 //
@@ -10,6 +11,9 @@ import com.intel.util.*;
 // **************************************************************************************************
 
 public class TEE_8442_0871 extends IntelApplet {
+	public boolean register = false;
+    public boolean login = false;
+
 
 	/**
 	 * This method will be called by the VM when a new session is opened to the Trusted Application 
@@ -24,7 +28,14 @@ public class TEE_8442_0871 extends IntelApplet {
 	 * 		treated similarly by the VM by sending "cancel" error code to the SW application).
 	 */
 	public int onInit(byte[] request) {
+		FlashStorage.eraseFlashData(0);
 		DebugPrint.printString("Hello, DAL!");
+		
+		register = FlashStorage.getFlashDataSize(0) != 0;
+		
+		if (register) DebugPrint.printString("User is register!");
+		else DebugPrint.printString("User is NOT register!");
+		
 		return APPLET_SUCCESS;
 	}
 	
@@ -47,11 +58,85 @@ public class TEE_8442_0871 extends IntelApplet {
 		
 		
 		switch (commandId) {
-			case 1: // add...
-				int[] nums = getIntegers(request);
-				int resp = nums[0] + nums[1];
-				sendIntResp(resp);
+			case 1: // register
+			{
+				if (register) {
+					// user is already registered
+					sendFailedResp();
+				}
+				
+				else {
+					// save the password
+					byte[] password = new byte[FlashStorage.getFlashDataSize(0)];
+					
+					FlashStorage.writeFlashData(0,  request, 0, request.length);
+					register = true;
+					
+					int code = 1;
+					byte[] resp = new byte[0];
+					sendResp(code, resp);
+				}
+				
 				break;
+			}
+			
+			case 2: // login
+			{
+				if(!register) 
+					sendFailedResp(); 
+				
+				else {
+					byte[] password = new byte[FlashStorage.getFlashDataSize(0)];
+					FlashStorage.readFlashData(0, password, 0);
+					
+					// check password
+					if (cmp_bytes(password, request)) {
+						login = true;
+						int code = 1;
+						byte[] resp = new byte[0];
+						sendResp(code, resp);
+					}
+					
+					else
+						sendFailedResp();
+				}
+				
+				break;
+			}
+			
+			case 3: // reset password
+			{
+				if (login) {
+					login = false;
+					FlashStorage.writeFlashData(0, request, 0, request.length);
+					int code = 1;
+					byte[] resp = new byte[0];
+					sendResp(code, resp);
+				}
+				
+				else
+					sendFailedResp();
+				
+				break;
+			}
+			
+			case 4: // get random
+			{
+				if (login) {
+					int length = getIntegers(request)[0]; 
+					byte[] random = new byte[length];
+					Random.getRandomBytes(random, (short)0, (short)length);
+					
+					int code = 1;
+					sendResp(code, random);
+				}
+				
+				else
+					sendFailedResp();
+				
+				break;
+			}
+			
 			default:
 				break;
 		}
@@ -65,14 +150,15 @@ public class TEE_8442_0871 extends IntelApplet {
 		return APPLET_SUCCESS;
 	}
 	
-	public void sendIntResp(int resp) {
-		byte[] bytesArray = new byte[4];
-		
-		for (int i = 0; i < bytesArray.length; ++i)
-		{
-			bytesArray[bytesArray.length - i - 1] = (byte) (resp & 0xFF);
-			resp >>= 8;
-		}
+	public void sendFailedResp() {
+		int code = 0;
+		byte[] resp = new byte[0];
+		sendResp(code, resp);
+	}
+	
+	public void sendResp(int code, byte[] resp) {
+		DebugPrint.printString("Sending code: " + code + ", message: ");
+		DebugPrint.printBuffer(resp);
 		
 		/*
          * To return the response data to the command, call the setResponse
@@ -80,8 +166,8 @@ public class TEE_8442_0871 extends IntelApplet {
          * Note that calling this method more than once will
          * reset the response data previously set.
          */
-        setResponse(bytesArray, 0, bytesArray.length);
-        
+        setResponse(resp, 0, resp.length);
+
         /*
          * In order to provide a return value for the command, which will be
          * delivered to the SW application communicating with the Trusted Application,
@@ -89,7 +175,7 @@ public class TEE_8442_0871 extends IntelApplet {
          * Note that calling this method more than once will reset the code previously set.
          * If not set, the default response code that will be returned to SW application is 0.
          */
-        setResponseCode(0); //can return an error by returning a 1, or 2...
+        setResponseCode(code);
 	}
 	
 	public int[] getIntegers(byte[] data) {
@@ -113,6 +199,18 @@ public class TEE_8442_0871 extends IntelApplet {
 		
 		return numbersArray;
 	}
+	
+	public boolean cmp_bytes(byte[] a, byte[] b) {
+		if (a.length != b.length)
+			return false;
+		else
+			for(int i = 0; i < a.length; ++i)
+				if (a[i] != b[i])
+					return false;
+		
+		return true;
+	}
+	
 	/**
 	 * This method will be called by the VM when the session being handled by
 	 * this Trusted Application instance is being closed 

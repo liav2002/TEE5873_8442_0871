@@ -8,24 +8,30 @@ namespace TEE_8442_0871Host
 {
     class Program
     {
-        static JhiSession session;
-        static Jhi jhi; 
+        enum Commands { Register = 1, Login = 2, Reset = 3, GetRandom = 4 };
+        static public JhiSession session;
+        static public Jhi jhi; 
         static void Main(string[] args)
         {
+            /************************************************************************************************************
+             *                                              START                                                       *
+             ***********************************************************************************************************/
+
 #if AMULET
             // When compiled for Amulet the Jhi.DisableDllValidation flag is set to true 
-			// in order to load the JHI.dll without DLL verification.
+            // in order to load the JHI.dll without DLL verification.
             // This is done because the JHI.dll is not in the regular JHI installation folder, 
-			// and therefore will not be found by the JhiSharp.dll.
+            // and therefore will not be found by the JhiSharp.dll.
             // After disabling the .dll validation, the JHI.dll will be loaded using the Windows search path
-			// and not by the JhiSharp.dll (see http://msdn.microsoft.com/en-us/library/7d83bc18(v=vs.100).aspx for 
-			// details on the search path that is used by Windows to locate a DLL) 
+            // and not by the JhiSharp.dll (see http://msdn.microsoft.com/en-us/library/7d83bc18(v=vs.100).aspx for 
+            // details on the search path that is used by Windows to locate a DLL) 
             // In this case the JHI.dll will be loaded from the $(OutDir) folder (bin\Amulet by default),
-			// which is the directory where the executable module for the current process is located.
+            // which is the directory where the executable module for the current process is located.
             // The JHI.dll was placed in the bin\Amulet folder during project build.
             Jhi.DisableDllValidation = true;
 #endif
             jhi = Jhi.Instance;
+
             // This is the UUID of this Trusted Application (TA).
             //The UUID is the same value as the applet.id field in the Intel(R) DAL Trusted Application manifest.
             string appletID = "d29f1599-d31a-4d31-9a63-01b67e5b5a48";
@@ -44,10 +50,84 @@ namespace TEE_8442_0871Host
             Console.WriteLine("Opening a session.");
             jhi.CreateSession(appletID, JHI_SESSION_FLAGS.None, initBuffer, out session);
 
-            // Send and Receive data to/from the Trusted Application
-            Console.Write("Fibonacci sequence up to 10th  element:\n");
-            int res = Fib(10);
-            Console.WriteLine("\n");
+            /************************************************************************************************************
+             *                                               BODY                                                       *
+             ***********************************************************************************************************/
+
+            PrintMenu();
+
+            int cmd = int.Parse(Console.ReadLine());
+            bool success = false;
+
+            while(cmd >= 1 && cmd <= 4)
+            {
+                switch(cmd)
+                {
+                    case (int)Commands.Register:
+                    {
+                        success = Register();
+
+                        if (!success)
+                            Console.WriteLine("User already registered");
+                        else
+                            Console.WriteLine("Successfully registered!");
+                        break;
+                    }
+
+                    case (int)Commands.Login:
+                    {
+                        success = Login();
+
+                        if (!success)
+                            Console.WriteLine("Wrong password !!");
+                        else
+                            Console.WriteLine("Successfully login!");
+                        break;
+                    }
+
+                    case (int)Commands.Reset:
+                    {
+                        success = ResetPassword();
+
+                        if (!success)
+                            Console.WriteLine("User is not login.");
+                        else
+                            Console.WriteLine("Successfully reset password!");
+                        break;
+                    }
+
+                    case (int)Commands.GetRandom:
+                    {
+                        Console.WriteLine("Enter number of bytes: ");
+                        int length = int.Parse(Console.ReadLine());
+
+                        byte[] random = new byte[length];
+                        success = GetRandom(length, ref random);
+
+                        if (!success)
+                            Console.WriteLine("User not login");
+                        else
+                        {
+                            Console.WriteLine("The random bytes: ");
+                            Console.WriteLine(PrintByteArray(random).ToString());
+                        }
+                        break;
+                    }
+
+                    default:
+                    {
+                        Console.WriteLine("GoodBye !!");
+                        break;
+                    }
+                }
+
+                Console.WriteLine("Enter next command: ");
+                cmd = int.Parse(Console.ReadLine());
+            }
+
+            /************************************************************************************************************
+             *                                               END                                                        *
+             ***********************************************************************************************************/
 
             // Close the session
             Console.WriteLine("Closing the session.");
@@ -61,66 +141,75 @@ namespace TEE_8442_0871Host
             Console.Read();
         }
 
-        static int Add(int a, int b)
+        static void PrintMenu()
         {
-            byte[] aBytes = BitConverter.GetBytes(a);
-            Array.Reverse(aBytes);
-
-            byte[] bBytes = BitConverter.GetBytes(b);
-            Array.Reverse(bBytes);
-
-            byte[] sendBuff = aBytes.Concat(bBytes).ToArray(); //sendBuff includes both numbers
-
-            // A buffer to hold the output data from the TA
-            //the size of 2000 can change by itself...
-            byte[] recvBuff = new byte[2000];
-
-            // The return value that the TA provides using the IntelApplet.setResponseCode method
-            int responseCode;
-
-            // The ID of the command to be performed by the TA
-            int cmdId = 1; // 1 stands for Add
-            
-            Console.Write("Performing send and receive operation...");
-            jhi.SendAndRecv2(session, cmdId, sendBuff, ref recvBuff, out responseCode);
-            //the "sendBuff" becomes the "request" in eclipse...
-            //send "recvBuff" by reference... and it changes acc to what is done in eclipse
-
-            Array.Reverse(recvBuff);
-            int res = BitConverter.ToInt32(recvBuff, 0);
-
-            return res;
+            Console.WriteLine("Commands:");
+            Console.WriteLine((int)Commands.Register + ": register.");
+            Console.WriteLine((int)Commands.Login + ": login.");
+            Console.WriteLine((int)Commands.Reset + ": reset password (login required first).");
+            Console.WriteLine((int)Commands.GetRandom + ": get random number (login required first).");
+            Console.WriteLine("anything else: for exit.");
+            Console.WriteLine("");
         }
 
-        static int Fib(int n)
+        static bool Register()
         {
-            int a = 0;
-            int b = 1;
-            int c = 0;
+            Console.WriteLine("Enter your password: ");
+            string text = Console.ReadLine();
+            byte[] password = System.Text.Encoding.UTF8.GetBytes(text);
 
-            if (n > 0)
-            {
-                --n;
-                Console.WriteLine("Fib iteration 1: " + a);
-            }
-            if (n > 0)
-            {
-                --n;
-                Console.WriteLine("Fib iteration 2: " + b);
-            }
-            for (int i = 0; i < n; ++i)
-            {
-                if(i > 0)
-                {
-                    a = b;
-                    b = c;
-                }
-                Console.Write("fib iteration " + (i + 3) + ":");
-                c = Add(a, b);
-                Console.WriteLine(c);
-            }
+            byte[] recvBuff = new byte[2000];
+            int responseCode;
+            int cmdId = (int)Commands.Register;
+            jhi.SendAndRecv2(session, cmdId, password, ref recvBuff, out responseCode);
+            return responseCode == 1; // if the responseCode is 1, the request succesfuly delivered
+        }
 
-            return c;
+        static bool Login()
+        {
+            Console.WriteLine("Enter your password: ");
+            string text = Console.ReadLine();
+            byte[] password = System.Text.Encoding.UTF8.GetBytes(text);
+
+            byte[] recvBuff = new byte[2000];
+            int responseCode;
+            int cmdId = (int)Commands.Login;
+            jhi.SendAndRecv2(session, cmdId, password, ref recvBuff, out responseCode);
+            return responseCode == 1; // if the responseCode is 1, the request succesfuly delivered
+        }
+
+        static bool ResetPassword()
+        {
+            Console.WriteLine("Enter new password: ");
+            string text = Console.ReadLine();
+            byte[] password = System.Text.Encoding.UTF8.GetBytes(text);
+
+            byte[] recvBuff = new byte[2000];
+            int responseCode;
+            int cmdId = (int)Commands.Reset;
+            jhi.SendAndRecv2(session, cmdId, password, ref recvBuff, out responseCode);
+            return responseCode == 1; // if the responseCode is 1, the request succesfuly delivered
+        }
+
+        static bool GetRandom(int length, ref byte[] randomBytes)
+        {
+            byte[] numBytes = BitConverter.GetBytes(length);
+            int cmdId = (int)Commands.GetRandom;
+            int responseCode;
+
+            jhi.SendAndRecv2(session, cmdId, numBytes, ref randomBytes, out responseCode);
+
+            return responseCode == 1; // if the responseCode is 1, the request succesfuly delivered
+        }
+
+        static public StringBuilder PrintByteArray(byte[] bytes)
+        {
+            var sb = new StringBuilder("");
+            foreach (var b in bytes)
+            {
+                sb.Append(b + " ");
+            }
+            return sb;
         }
     }
 }
