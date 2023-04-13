@@ -11,7 +11,7 @@ import com.intel.util.*;
 // **************************************************************************************************
 
 public class TEE_8442_0871 extends IntelApplet {
-	public boolean register;
+	public boolean register = false;
     public boolean login = false;
 
 
@@ -28,6 +28,7 @@ public class TEE_8442_0871 extends IntelApplet {
 	 * 		treated similarly by the VM by sending "cancel" error code to the SW application).
 	 */
 	public int onInit(byte[] request) {
+		FlashStorage.eraseFlashData(0);
 		DebugPrint.printString("Hello, DAL!");
 		
 		register = FlashStorage.getFlashDataSize(0) != 0;
