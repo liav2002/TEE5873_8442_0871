@@ -1,6 +1,4 @@
 package TEE_8442_0871;
-
-import com.intel.crypto.Random;
 import com.intel.util.*;
 
 //
@@ -11,10 +9,28 @@ import com.intel.util.*;
 // **************************************************************************************************
 
 public class TEE_8442_0871 extends IntelApplet {
-	public boolean register = false;
-    public boolean login = false;
+	FlashStorageAPI fsInstance = FlashStorageAPI.getInstance();
+    boolean login = false;
 
-
+    //FOR RSA KEY:
+    /** Description of RSA keyHolder's methods (from https://software.intel.com/sites/lan
+     mod - RSA key modulus (N)
+     modIndex - index in the modulus array
+     modLength - modulus length in bytes
+     e - RSA key public exponent (E)
+     eIndex - index in the public exponent array
+     eLength - public exponent length in bytes
+     d - RSA key private exponent (D)
+     dIndex - index in the private exponent array
+     dLength - private exponent length in bytes
+     */
+    
+    //Response Codes:
+    final int RES_FAIL_NOT_LOGGED_IN= 0;
+    final int RESPONSE_SUCCESS = 1;
+    final int RES_FAIL_NO_KEY_GENERATED = 2;
+    final int RES_KEY_ALREADY_GENERATED = 3;
+    
 	/**
 	 * This method will be called by the VM when a new session is opened to the Trusted Application 
 	 * and this Trusted Application instance is being created to handle the new session.
@@ -28,14 +44,6 @@ public class TEE_8442_0871 extends IntelApplet {
 	 * 		treated similarly by the VM by sending "cancel" error code to the SW application).
 	 */
 	public int onInit(byte[] request) {
-		FlashStorage.eraseFlashData(0);
-		DebugPrint.printString("Hello, DAL!");
-		
-		register = FlashStorage.getFlashDataSize(0) != 0;
-		
-		if (register) DebugPrint.printString("User is register!");
-		else DebugPrint.printString("User is NOT register!");
-		
 		return APPLET_SUCCESS;
 	}
 	
@@ -58,87 +66,97 @@ public class TEE_8442_0871 extends IntelApplet {
 		
 		
 		switch (commandId) {
-			case 1: // register
-			{
-				if (register) {
-					// user is already registered
-					sendFailedResp();
-				}
-				
-				else {
-					// save the password
-					byte[] password = new byte[FlashStorage.getFlashDataSize(0)];
-					
-					FlashStorage.writeFlashData(0,  request, 0, request.length);
-					register = true;
-					
-					int code = 1;
-					byte[] resp = new byte[0];
-					sendResp(code, resp);
-				}
-				
-				break;
-			}
-			
-			case 2: // login
-			{
-				if(!register) 
-					sendFailedResp(); 
-				
-				else {
-					byte[] password = new byte[FlashStorage.getFlashDataSize(0)];
-					FlashStorage.readFlashData(0, password, 0);
-					
-					// check password
-					if (cmp_bytes(password, request)) {
-						login = true;
-						int code = 1;
-						byte[] resp = new byte[0];
-						sendResp(code, resp);
-					}
-					
-					else
-						sendFailedResp();
-				}
-				
-				break;
-			}
-			
-			case 3: // reset password
-			{
-				if (login) {
-					login = false;
-					FlashStorage.writeFlashData(0, request, 0, request.length);
-					int code = 1;
-					byte[] resp = new byte[0];
-					sendResp(code, resp);
-				}
-				
-				else
-					sendFailedResp();
-				
-				break;
-			}
-			
-			case 4: // get random
-			{
-				if (login) {
-					int length = getIntegers(request)[0]; 
-					byte[] random = new byte[length];
-					Random.getRandomBytes(random, (short)0, (short)length);
-					
-					int code = 1;
-					sendResp(code, random);
-				}
-				
-				else
-					sendFailedResp();
-				
-				break;
-			}
-			
-			default:
-				break;
+	        case 1: // register	
+	        {
+	            if (fsInstance.isRegistered()) {
+	                // the user already registered
+	                sendEmptyResponse(RES_FAIL_NOT_LOGGED_IN);
+	            } else {
+	                fsInstance.setPassword(request);
+	                sendEmptyResponse(RESPONSE_SUCCESS);
+	            }
+	            break;
+	        }
+
+	        case 2: // login
+	        {
+	            if(!fsInstance.isRegistered())
+	                sendEmptyResponse(RES_FAIL_NOT_LOGGED_IN);
+	            else {
+	                byte[] password = fsInstance.getPassword();
+	                // check the password
+	
+	                if (Utils.equals(password, request))
+	                // we not use the operator == because it seems like the == compares the memory address of the arrays
+	                // instead of their values
+	                {
+	                    login = true;
+	                    sendEmptyResponse(RESPONSE_SUCCESS);
+	                } else
+	                    sendEmptyResponse(RES_FAIL_NOT_LOGGED_IN);
+	            }
+	
+	            break;
+	        }
+
+	        case 3: // reset password
+	        {
+	            if (login) {
+	                login = false;
+	                // set the password
+	                fsInstance.setPassword(request);
+	                sendEmptyResponse(RESPONSE_SUCCESS);
+	            } else
+	                sendEmptyResponse(RES_FAIL_NOT_LOGGED_IN);
+	            break;
+	        }
+
+	        case 4: // generate pair of keys:
+	        {
+	            if (login) {
+	                if(fsInstance.existsKey())
+	                    sendEmptyResponse(RES_KEY_ALREADY_GENERATED);
+	                else
+	                {
+	                    RSAApi.generateKeys(); // this function also save them in the FlashStorage
+	                    sendEmptyResponse(RESPONSE_SUCCESS);
+	                }
+	            } else {
+	                sendEmptyResponse(RES_FAIL_NOT_LOGGED_IN);
+	            }
+	            break;
+	        }
+
+	        case 5: // send public key to Host:
+	        {
+	            if (login) {
+	                if(fsInstance.existsKey())
+	                    sendResponse(RESPONSE_SUCCESS, getPublicKey());
+	                else
+	                    sendEmptyResponse(RES_FAIL_NO_KEY_GENERATED);
+	            } else {
+	                sendEmptyResponse(RES_FAIL_NOT_LOGGED_IN);
+	            }
+	            break;
+	        }
+
+	        case 6: // receive message, sign with private key, send to host
+	        {
+	        	if (login) {
+	                if(fsInstance.existsKey())
+	                {
+	                    sendResponse(RESPONSE_SUCCESS, signMsg(request));
+	                }
+	                else
+	                {
+	                    sendEmptyResponse(RES_FAIL_NO_KEY_GENERATED);
+	                }
+	            } else {
+	
+	                sendEmptyResponse(RES_FAIL_NOT_LOGGED_IN);
+	            }
+	            break;
+	        }
 		}
 
 		/*
@@ -150,23 +168,47 @@ public class TEE_8442_0871 extends IntelApplet {
 		return APPLET_SUCCESS;
 	}
 	
-	public void sendFailedResp() {
-		int code = 0;
-		byte[] resp = new byte[0];
-		sendResp(code, resp);
+	/**
+    *
+    * @return public key "e" from flash storage
+    */
+	public byte[] getPublicKey() {
+       //(1) extract N, E, D from the flash storage,
+       byte[] nArray = new byte[RSAApi.PRIVATE_KEY_LENGTH];
+       byte[] eArray = new byte[RSAApi.PUBLIC_KEY_LENGTH];
+       byte[] dArray = new byte[RSAApi.PRIVATE_KEY_LENGTH];
+       fsInstance.getKeys(nArray, eArray, dArray);
+       DebugPrint.printBuffer(eArray);
+       return eArray;
 	}
 	
-	public void sendResp(int code, byte[] resp) {
-		DebugPrint.printString("Sending code: " + code + ", message: ");
-		DebugPrint.printBuffer(resp);
-		
-		/*
+	/** signMsg() - signs message with applet's private key
+    *
+    * @param msg - message to encrypt
+    * @return signed string msg, in bytes
+    */
+	public byte[] signMsg(byte[] msg) {
+       RSAApi.generateKeys();
+       return RSAApi.signature(msg);
+	}
+	
+	//sends response code, with empty byte[]
+    public void sendEmptyResponse(int responseCode) {
+        byte[] response = new byte[0];
+        sendResponse(responseCode, response);
+    }
+	
+    public void sendResponse(int code, byte[] response) {
+        DebugPrint.printString("Sending code: " + code + ", message: ");
+        DebugPrint.printBuffer(response);
+
+        /*
          * To return the response data to the command, call the setResponse
          * method before returning from this method.
          * Note that calling this method more than once will
          * reset the response data previously set.
          */
-        setResponse(resp, 0, resp.length);
+        setResponse(response, 0, response.length);
 
         /*
          * In order to provide a return value for the command, which will be
@@ -176,40 +218,7 @@ public class TEE_8442_0871 extends IntelApplet {
          * If not set, the default response code that will be returned to SW application is 0.
          */
         setResponseCode(code);
-	}
-	
-	public int[] getIntegers(byte[] data) {
-		final int integerBytes = 4;
-		int arraySize = (int) (data.length / integerBytes);
-		int[] numbersArray = new int[arraySize];
-		
-		// Casting bytes value to integers.
-		for (int i = 0; i < arraySize; ++i)
-		{
-			for (int j = 0; j < integerBytes; ++j)
-			{
-				numbersArray[i] = (numbersArray[i] << 8) + (data[j + i * integerBytes] & 0xFF);
-			}
-		}
-		
-		// Print result for debug
-		System.out.println("nums: ");
-		for (int n: numbersArray)
-			System.out.println(n);
-		
-		return numbersArray;
-	}
-	
-	public boolean cmp_bytes(byte[] a, byte[] b) {
-		if (a.length != b.length)
-			return false;
-		else
-			for(int i = 0; i < a.length; ++i)
-				if (a[i] != b[i])
-					return false;
-		
-		return true;
-	}
+    }
 	
 	/**
 	 * This method will be called by the VM when the session being handled by
