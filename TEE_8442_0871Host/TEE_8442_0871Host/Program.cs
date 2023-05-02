@@ -3,14 +3,27 @@ using System;
 using System.Text;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 
 namespace TEE_8442_0871Host
 {
     class Program
     {
-        enum Commands { Register = 1, Login = 2, Reset = 3, GetRandom = 4 };
+        enum Commands
+        {
+            REGISTER = 1, LOGIN = 2, RESET = 3, GENERATE_PAIR_KEYS = 4,
+            GET_PUBLIC_KEY = 5, SIGN_MSG = 6
+        };
+
+        //response codes from applet:
+        const int RES_FAIL_NOT_LOGGED_IN = 0;
+        const int RESPONSE_SUCCESS = 1;
+        const int RES_FAIL_NO_KEY_GENERATED = 2;
+        const int RES_KEY_ALREADY_GENERATED = 3;
+
+
         static public JhiSession session;
-        static public Jhi jhi; 
+        static public Jhi jhi;
         static void Main(string[] args)
         {
             /************************************************************************************************************
@@ -59,11 +72,11 @@ namespace TEE_8442_0871Host
             int cmd = int.Parse(Console.ReadLine());
             bool success = false;
 
-            while(cmd >= 1 && cmd <= 4)
+            while(cmd >= 1 && cmd <= 6)
             {
                 switch(cmd)
                 {
-                    case (int)Commands.Register:
+                    case (int)Commands.REGISTER:
                     {
                         success = Register();
 
@@ -74,42 +87,75 @@ namespace TEE_8442_0871Host
                         break;
                     }
 
-                    case (int)Commands.Login:
+                    case (int)Commands.LOGIN:
                     {
                         success = Login();
 
                         if (!success)
-                            Console.WriteLine("Wrong password !!");
+                            Console.WriteLine("Wrong password");
                         else
-                            Console.WriteLine("Successfully login!");
+                            Console.WriteLine("Succefuly login!");
                         break;
                     }
 
-                    case (int)Commands.Reset:
+                    case (int)Commands.RESET:
                     {
-                        success = ResetPassword();
-
-                        if (!success)
-                            Console.WriteLine("User is not login.");
-                        else
-                            Console.WriteLine("Successfully reset password!");
-                        break;
-                    }
-
-                    case (int)Commands.GetRandom:
-                    {
-                        Console.WriteLine("Enter number of bytes: ");
-                        int length = int.Parse(Console.ReadLine());
-
-                        byte[] random = new byte[length];
-                        success = GetRandom(length, ref random);
-
-                        if (!success)
-                            Console.WriteLine("User not login");
-                        else
+                        try
                         {
-                            Console.WriteLine("The random bytes: ");
-                            Console.WriteLine(PrintByteArray(random).ToString());
+                            ResetPassword();
+                            Console.WriteLine("Successfully reset password!");
+                        }
+                        catch (EXUserNotLoggedIn ex)
+                        {
+                            Console.WriteLine(ex.ToString());
+                        }
+                        break;
+                    }
+
+                    case (int)Commands.GENERATE_PAIR_KEYS:
+                    {
+                        try
+                        {
+                            generatePairKeys();
+                            Console.WriteLine("Generated public and private keys!");
+                        }
+                        catch (EXUserNotLoggedIn ex)
+                        {
+                            Console.WriteLine(ex.ToString());
+                        }
+                        break;
+                    }
+
+                    case (int)Commands.GET_PUBLIC_KEY:
+                    {
+                        try
+                        {
+                            Console.WriteLine(ConvertByteArrayToString(getPublicKey()));
+                        }
+                        catch (EXUserNotLoggedIn ex)
+                        {
+                            Console.WriteLine(ex.ToString());
+                        }
+                        catch (EXNoKeyGenerated ex)
+                        {
+                            Console.WriteLine(ex.ToString());
+                        }
+                        break;
+                    }
+
+                    case (int)Commands.SIGN_MSG:
+                    {
+                        try
+                        {
+                            signMessage(); //this method prints out signed msg and verifies...
+                        }
+                        catch (EXUserNotLoggedIn ex)
+                        {
+                            Console.WriteLine(ex.ToString());
+                        }
+                        catch (EXNoKeyGenerated ex)
+                        {
+                            Console.WriteLine(ex.ToString());
                         }
                         break;
                     }
@@ -121,8 +167,15 @@ namespace TEE_8442_0871Host
                     }
                 }
 
-                Console.WriteLine("Enter next command: ");
-                cmd = int.Parse(Console.ReadLine());
+                Console.WriteLine("\nEnter next command: ");
+                try
+                {
+                    Int32.TryParse(Console.ReadLine(), out cmd);
+                }
+                catch (Exception)
+                {
+                    Console.WriteLine("ERROR: input isn't a number - please try again!");
+                }
             }
 
             /************************************************************************************************************
@@ -143,13 +196,15 @@ namespace TEE_8442_0871Host
 
         static void PrintMenu()
         {
-            Console.WriteLine("Commands:");
-            Console.WriteLine((int)Commands.Register + ": register.");
-            Console.WriteLine((int)Commands.Login + ": login.");
-            Console.WriteLine((int)Commands.Reset + ": reset password (login required first).");
-            Console.WriteLine((int)Commands.GetRandom + ": get random number (login required first).");
-            Console.WriteLine("anything else: for exit.");
-            Console.WriteLine("");
+            Console.WriteLine("\nChoose one of the following:");
+            Console.WriteLine((int)Commands.REGISTER + ": to register");
+            Console.WriteLine((int)Commands.LOGIN + ": to login");
+            Console.WriteLine((int)Commands.RESET + ": to reset password");
+            Console.WriteLine((int)Commands.GENERATE_PAIR_KEYS + ": to generate a pair of public and private keys");
+            Console.WriteLine((int)Commands.GET_PUBLIC_KEY + ": to get the applet's public key");
+            Console.WriteLine((int)Commands.SIGN_MSG + ": to send a msg, " +
+                "and receive an ecnrypted msg (signed with Applet's private key)");
+            Console.WriteLine("anything else: for exit\n\n");
         }
 
         static bool Register()
@@ -160,9 +215,9 @@ namespace TEE_8442_0871Host
 
             byte[] recvBuff = new byte[2000];
             int responseCode;
-            int cmdId = (int)Commands.Register;
+            int cmdId = (int)Commands.REGISTER;
             jhi.SendAndRecv2(session, cmdId, password, ref recvBuff, out responseCode);
-            return responseCode == 1; // if the responseCode is 1, the request succesfuly delivered
+            return responseCode == RESPONSE_SUCCESS; // if the responseCode is 1, the request succesfuly delivered
         }
 
         static bool Login()
@@ -173,9 +228,9 @@ namespace TEE_8442_0871Host
 
             byte[] recvBuff = new byte[2000];
             int responseCode;
-            int cmdId = (int)Commands.Login;
+            int cmdId = (int)Commands.LOGIN;
             jhi.SendAndRecv2(session, cmdId, password, ref recvBuff, out responseCode);
-            return responseCode == 1; // if the responseCode is 1, the request succesfuly delivered
+            return responseCode == RESPONSE_SUCCESS; // if the responseCode is 1, the request succesfuly delivered
         }
 
         static bool ResetPassword()
@@ -186,30 +241,119 @@ namespace TEE_8442_0871Host
 
             byte[] recvBuff = new byte[2000];
             int responseCode;
-            int cmdId = (int)Commands.Reset;
+            int cmdId = (int)Commands.RESET;
             jhi.SendAndRecv2(session, cmdId, password, ref recvBuff, out responseCode);
-            return responseCode == 1; // if the responseCode is 1, the request succesfuly delivered
+            return responseCode == RESPONSE_SUCCESS; // if the responseCode is 1, the request succesfuly delivered
         }
 
-        static bool GetRandom(int length, ref byte[] randomBytes)
+        static void generatePairKeys() //tells applet to generate the key, save in flash storage
         {
-            byte[] numBytes = BitConverter.GetBytes(length);
-            int cmdId = (int)Commands.GetRandom;
+            byte[] recvBuff = new byte[1000];
             int responseCode;
-
-            jhi.SendAndRecv2(session, cmdId, numBytes, ref randomBytes, out responseCode);
-
-            return responseCode == 1; // if the responseCode is 1, the request succesfuly delivered
+            int cmdId = (int)Commands.GENERATE_PAIR_KEYS;
+            jhi.SendAndRecv2(session, cmdId, new byte[0], ref recvBuff, out responseCode);
+            if (responseCode == RES_FAIL_NOT_LOGGED_IN)
+                throw new EXUserNotLoggedIn();
         }
 
-        static public StringBuilder PrintByteArray(byte[] bytes)
+        static void signMessage()
         {
+            //receive message,
+            string origStringMsg = "shalom";
+            
+            //ask applet to sign with its private key, receive signed message
+            byte[] signedMsg = new byte[1000];
+            int responseCode;
+            int cmdId = (int)Commands.SIGN_MSG;
+            jhi.SendAndRecv2(session, cmdId, Encoding.ASCII.GetBytes(origStringMsg), ref signedMsg, out responseCode);
+           
+            if (responseCode == RES_FAIL_NOT_LOGGED_IN)
+                throw new EXUserNotLoggedIn();
+            if (responseCode == RES_FAIL_NO_KEY_GENERATED)
+                throw new EXNoKeyGenerated();
+
+            //verify with applet's public key...
+            Console.WriteLine("original message: " + origStringMsg.ToString() + "\n");
+            Console.WriteLine("signed message: " + ConvertByteArrayToString(signedMsg).ToString() + "\n");
+
+            byte[] publicKeyBtyeArr = getPublicKey();
+
+            RSACryptoServiceProvider rsaObj = new RSACryptoServiceProvider();
+            //MUST  SET RSAOBJ's public key and modulus based on "publicKeyByteArr"...
+            /* otherwise, it is checking the data with the wrong key..
+             * somewhow put parameters in here: CspParameters csp = new CspParameters(); ??
+             *
+             * https://docs.microsoft.com/en-us/dotnet/api/system.security.cryptography.rsacryptoserviceprovider.-ctor?view=net-6.0#system-security-cryptography-rsacryptoserviceprovider-ctor(system-security-cryptography-cspparameters)
+             */
+
+            bool verified = rsaObj.VerifyData(
+                Encoding.ASCII.GetBytes(origStringMsg), SHA256.Create(), signedMsg
+                );
+            
+            if (verified)
+                Console.WriteLine("verified!");
+            else
+                Console.WriteLine("msg was not verified correctly..");
+        }
+
+        void foo()
+        {
+            RSACryptoServiceProvider RSAalg = new RSACryptoServiceProvider();
+
+            RSAParameters Key = RSAalg.ExportParameters(true);
+            Console.WriteLine(Key.Exponent);
+            //this link? https://stackoverflow.com/questions/34080813/how-to-set-rsacryptoserviceprovider-public-key
+        }
+
+        static byte[] getPublicKey()
+        {
+            byte[] recvBuff = new byte[1000];
+            int responseCode;
+            int cmdId = (int)Commands.GET_PUBLIC_KEY;
+            jhi.SendAndRecv2(session, cmdId, new byte[0], ref recvBuff, out responseCode);
+            if (responseCode == RES_FAIL_NOT_LOGGED_IN)
+                throw new EXUserNotLoggedIn();
+            else if (responseCode == RES_FAIL_NO_KEY_GENERATED)
+                throw new EXNoKeyGenerated();
+            return recvBuff; //receives public key in byte[] format..
+        }
+
+        static public StringBuilder ConvertByteArrayToString(byte[] bytes)
+        {
+            //this func only works for "int" in byte array??
             var sb = new StringBuilder("");
             foreach (var b in bytes)
             {
                 sb.Append(b + " ");
             }
             return sb;
+        }
+    }
+}
+
+
+namespace TEE_8442_0871Host
+{
+    class EXNoAccessToApplet : Exception
+    {
+        public override string ToString()
+        {
+            return "Can't access the Applet";
+        }
+    }
+
+    class EXUserNotLoggedIn : EXNoAccessToApplet
+    {
+        public override string ToString()
+        {
+            return base.ToString() + "- User not logged in.";
+        }
+    }
+    class EXNoKeyGenerated : EXNoAccessToApplet
+    {
+        public override string ToString()
+        {
+            return base.ToString() + "- no key generated!";
         }
     }
 }
