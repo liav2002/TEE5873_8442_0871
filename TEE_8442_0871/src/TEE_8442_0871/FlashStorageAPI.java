@@ -6,8 +6,7 @@ public class FlashStorageAPI {
 	// This is a singleton pattern.
     private static FlashStorageAPI instance = null;
 
-    private final int KEY_CODE = 1;
-    private final int PASSWORD_CODE = 0;
+    private final int SEED_CODE = 1;
     
     /**
      * This function is used to get the singleton instance of the FlashStorageService
@@ -22,67 +21,39 @@ public class FlashStorageAPI {
         return instance;
     }
     
-    private FlashStorageAPI() { //private CTOR:
-        resetKeyAndRegister(); //this function makes rest of CTOR irrelevant..
+    private FlashStorageAPI() { 
+    	
     }
     
-    private void resetKeyAndRegister() {
-        if(existsKey())
-            FlashStorage.eraseFlashData(KEY_CODE);
-        if(isRegistered())
-            FlashStorage.eraseFlashData(PASSWORD_CODE);
-    }
-    
-    /**
-     * Check if the password is stored in the flash memory
-     *
-     * @return A boolean value.
-     */
-    public boolean isRegistered() {
-        return 0 != FlashStorage.getFlashDataSize(PASSWORD_CODE);
+    public void resetSeed() {
+        if(existsSeed())
+            FlashStorage.eraseFlashData(SEED_CODE);   
     }
     
     /**
-     * Check if the key is stored in the flash memory
+     * Check if the seed is stored in the flash memory
      *
      * @return A boolean value.
      */
-    public boolean existsKey() {
-        return 0 != FlashStorage.getFlashDataSize(KEY_CODE);
+    public boolean existsSeed() {
+        return 0 != FlashStorage.getFlashDataSize(SEED_CODE);
     }
     
     // getters and setters
-    public byte[] getPassword() {
-        byte[] res = new byte[FlashStorage.getFlashDataSize(PASSWORD_CODE)];
-        FlashStorage.readFlashData(PASSWORD_CODE, res, 0);
+    public byte[] getSeed() {
+        byte[] res = new byte[FlashStorage.getFlashDataSize(SEED_CODE)];
+        FlashStorage.readFlashData(SEED_CODE, res, 0);
         return res;
-    }
-
-    public void getKeys(byte[] nArray, byte[] eArray, byte[] dArray) {
-        byte[] res = new byte[FlashStorage.getFlashDataSize(KEY_CODE)];
-        FlashStorage.readFlashData(KEY_CODE, res, 0);
-        Utils.splitArray(res, nArray, eArray, dArray);
     }
     
     /**
-     * It sets the password to the data passed in.
+     * It sets the seed to the data passed in.
      *
      * @param data The data to be written to the flash storage.
      */
-    public void setPassword(byte[] data) {
+    public void setSeed(byte[] data) {
 
         // write to the FlaseStorage
-        FlashStorage.writeFlashData(PASSWORD_CODE, data, 0, data.length);
-    }
-    
-    public void setKey(byte[] data) {
-        // write to the FlaseStorage
-        FlashStorage.writeFlashData(KEY_CODE, data, 0, data.length);
-    }
-
-    public void setKey(byte[] a, byte[] b, byte[] c) {
-        // write to the FlaseStorage
-        byte[] data = Utils.concatArrays(a, b, c);
-        FlashStorage.writeFlashData(KEY_CODE, data, 0, data.length);
+        FlashStorage.writeFlashData(SEED_CODE, data, 0, data.length);
     }
 }

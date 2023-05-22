@@ -1,21 +1,32 @@
 ﻿using Intel.Dal;
 using System;
 using System.Text;
-using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Net;
 using System.Net.Sockets;
+using System.Collections.Generic;
+using System.IO;
 
 namespace TEE_8442_0871Host
 {
     class HostProgram
     {
-        enum Commands
+        enum AppletOperation
         {
-            REGISTER = 1, LOGIN = 2, RESET = 3, GENERATE_PAIR_KEYS = 4,
-            GET_PUBLIC_KEY = 5, SIGN_MSG = 6, RESET_FLASH = 7
+            REGISTER = 1, LOGIN = 2, RESET_PASSWRD = 3, GENERATE_PAIR_KEYS = 4,
+            GET_PUBLIC_KEY = 5, SIGN_MSG = 6, RESET_FLASH = 7,
+            SET_SEED = 8, GET_OTP = 9
         };
+        enum ServerOperation
+        {
+            REGISTER = 0, //sends UserId, gets a seed..
+            LOGIN = 1,      //sends userID and OTP, trys to enter
+            EXIT = 2        //stops connection with server (to close server program)
+        }
+
+        //response codes for server:
+        private static readonly string END_OF_MESSAGE = "<EOF>";
+        private static readonly string SPACE = " ";
 
         //response codes from applet:
         const int RES_FAIL_NOT_LOGGED_IN = 0;
@@ -57,37 +68,6 @@ namespace TEE_8442_0871Host
             Console.Write("$appletPath = " + project_directory + dalpPath + "\n\n");
             string appletPath = project_directory + dalpPath;
 
-            /************************************************************************************************************
-             *                                               BODY                                                       *
-             ***********************************************************************************************************/
-
-            // get user id and seed from the server:
-
-            byte[] recvMsg = new byte[100];
-            int num = 0; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            byte[] msg = Encoding.ASCII.GetBytes(num.ToString() + "<EOF>");
-            sendAndRecvFromServer(msg, recvMsg);
-
-            string recvStr = Encoding.ASCII.GetString(recvMsg, 0, recvMsg.Length);
-
-            int userId, randNum, counter = 0;
-
-            //get user id
-            string bufferStr = "";
-            while (recvStr[counter] != ' ')
-            {
-                bufferStr += recvStr[counter++];
-            }
-            userId = Int32.Parse(bufferStr);
-            
-            //get random number
-            bufferStr = "";
-            while (recvStr[counter] != '<')
-            {
-                bufferStr += recvStr[counter++];
-            }
-            randNum = Int32.Parse(bufferStr);
-
             // Install the Trusted Application
             Console.WriteLine("Installing the applet.");
             jhi.Install(appletID, appletPath);
@@ -97,8 +77,26 @@ namespace TEE_8442_0871Host
             Console.WriteLine("Opening a session.");
             jhi.CreateSession(appletID, JHI_SESSION_FLAGS.None, initBuffer, out session);
 
-            // send data to applet
-            sendToApplet(userId, ConvertIntToByteArr(randNum));
+            /************************************************************************************************************
+             *                                               BODY                                                       *
+             ***********************************************************************************************************/
+            int userId = 0;
+            int seed = 10;
+
+            // send seed to be saved
+            byte[] seedByte = new byte[20];
+            ConvertIntToByteArr(seed).CopyTo(seedByte, 0);
+            sendToApplet((int)AppletOperation.SET_SEED, seedByte);
+
+            // get otp
+            byte[] otp = getOTPFromApplet();
+
+            // verify with server
+            bool success = sendOTP_toServer(userId, otp);
+
+            //Close Server's session
+            sendAndRecvFromServer(Encoding.ASCII.GetBytes(((int)ServerOperation.EXIT).ToString() + END_OF_MESSAGE), new byte[0]);
+            Console.WriteLine("closed the server");
 
             /************************************************************************************************************
              *                                               END                                                        *
@@ -118,8 +116,6 @@ namespace TEE_8442_0871Host
 
         public static void sendAndRecvFromServer(byte[] msgToSend, byte[] msgToRecv)
         {
-            Console.WriteLine("HOST'S CONSOLE:");
-
             try
             {
                 // Connect to a Remote server
@@ -152,40 +148,83 @@ namespace TEE_8442_0871Host
                         Encoding.ASCII.GetString(msgToRecv, 0, bytesRec));
 
                     // Release the socket.
+                    Console.WriteLine("Closing socket");
                     sender.Shutdown(SocketShutdown.Both);
                     sender.Close();
                 }
-
                 catch (ArgumentNullException ane)
                 {
                     Console.WriteLine("ArgumentNullException : {0}", ane.ToString());
                 }
-
                 catch (SocketException se) //throw when tries to connect to server's socket, but it is not open..
                 {
                     Console.WriteLine("SocketException : {0}", se.ToString());
                 }
-
                 catch (Exception e)
                 {
                     Console.WriteLine("Unexpected exception : {0}", e.ToString());
                 }
-            }
 
+            }
             catch (Exception e)
             {
                 Console.WriteLine(e.ToString());
             }
         }
 
-        private static bool sendToApplet(int id, byte[] seed)
+        private static int registerAndGetSeed(int userId)  //Registers with Server, get's seed (for the OTP)
         {
+            byte[] recvMsg = new byte[100]; //to receive userId, and "seed" from Server
+            // Encode the data string into a byte array
+            byte[] msg = Encoding.ASCII.GetBytes(((int)ServerOperation.REGISTER).ToString() + SPACE +
+                userId.ToString() + END_OF_MESSAGE);
+            sendAndRecvFromServer(msg, recvMsg);
+
+            //  string receivedStr = ConvertByteArrayToString(recvMsg).ToString();
+            string receivedStr = Encoding.ASCII.GetString(recvMsg, 0, recvMsg.Length);
+            //not good to use "recvMsg.Length" ... should think of better solution
+
+            int counter = 0;
+            string bufferStr = "";
+
+            while (receivedStr[counter] != END_OF_MESSAGE[0])
+            {
+                bufferStr += receivedStr[counter++];
+            }
+            return Int32.Parse(bufferStr);
+        }
+
+        private static bool sendToApplet(int cmd, byte[] seedFromServer)
+        {
+            //used to send Seed to Applet
             byte[] recvBuff = new byte[2000];
             int responseCode;
-
-            jhi.SendAndRecv2(session, id, seed, ref recvBuff, out responseCode);
+            jhi.SendAndRecv2(session, cmd, seedFromServer, ref recvBuff, out responseCode);
             return responseCode == RESPONSE_SUCCESS; // if the responseCode is 1, the request succesfuly delivered
+        }
 
+        private static byte[] getOTPFromApplet()
+        { 
+            byte[] recvBuff = new byte[2000];
+            int responseCode;
+            DateTimeOffset currentTime = DateTimeOffset.Now;
+            long unixTimestampSeconds = (long)currentTime.Subtract(new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero)).TotalSeconds;
+            byte[] epochTime = BitConverter.GetBytes(unixTimestampSeconds);
+
+            jhi.SendAndRecv2(session, (int)AppletOperation.GET_OTP, epochTime, ref recvBuff, out responseCode);
+
+            Console.WriteLine("received time seed: " + BitConverter.ToInt32(recvBuff, 0).ToString());
+
+            if (responseCode == RESPONSE_SUCCESS)
+                return recvBuff;
+            else
+                throw new Exception("problem");
+        }
+
+        private static bool sendOTP_toServer(int userId, byte[] otp)
+        {
+
+            return false; // not implemented yet.
         }
 
         private static byte[] ConvertIntToByteArr(int intValue)
@@ -194,6 +233,30 @@ namespace TEE_8442_0871Host
             if (BitConverter.IsLittleEndian)
                 Array.Reverse(intBytes);
             return intBytes;
+        }
+
+        static private byte[] concatByteArr(params byte[][] arrays)
+        {
+            List<byte> resList = new List<byte>();
+
+            for (int i = 0; i < arrays.GetLength(0); i++)
+            {
+                for (int j = 0; j < arrays[i].GetLength(0); j++)
+                {
+                    resList.Add(arrays[i][j]);
+                }
+            }
+            return resList.ToArray();
+        }
+
+        static public StringBuilder ConvertByteArrayToString(byte[] bytes)
+        {
+            var sb = new StringBuilder("");
+            foreach (var b in bytes)
+            {
+                sb.Append(b + " ");
+            }
+            return sb;
         }
     }
 }

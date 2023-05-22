@@ -1,5 +1,13 @@
 package TEE_8442_0871;
 
+using Intel.Dal;
+using System;
+using System.Text;
+using System.Security.Cryptography;
+using System.Net;
+using System.Net.Sockets;
+using System.Collections.Generic;
+
 public class Utils {
 	private static final int INT_SIZE = 4;
 	

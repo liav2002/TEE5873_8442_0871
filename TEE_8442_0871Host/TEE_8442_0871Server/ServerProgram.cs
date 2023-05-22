@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace TEE_8442_0871Server
@@ -18,85 +19,157 @@ namespace TEE_8442_0871Server
         }
     }
 
+    enum HostOperation
+    {
+        REGISTER = 0,  //Client (Host) sends UserId, gets a seed..
+        LOGIN = 1,    //Client (Host) sends userID and OTP, trys to enter
+        EXIT = 2       //stops connection with server (to close server program)
+
+    }
+
     public class ServerProgram
     {
         private static readonly string END_OF_MESSAGE = "<EOF>";
-        private static readonly List<DataBlock> lst = new List<DataBlock>();
+        private static readonly string SPACE = " ";
+        private static readonly List<DataBlock> lstDataBlock = new List<DataBlock>();
 
         public static int Main(string[] args)
         {
             Console.WriteLine("SERVER'S CONSOLE:");
-            StartServer();
-            return 0;
-        }
 
-        public static void StartServer()
-        {
-            // Get Host IP Address that is used to establish a connection
-            // In this case, we get one IP address of localhost that is IP : 127.0.0.1
-            // If a host has multiple addresses, you will get a list of addresses
             var host = Dns.GetHostEntry("localhost");
             var ipAddress = host.AddressList[0];
             var localEndPoint = new IPEndPoint(ipAddress, 12000);
 
+            startServer(ipAddress.AddressFamily, localEndPoint);
+
+            Console.WriteLine("\n Press any key to continue...");
+            Console.ReadKey();
+
+            return 0;
+        }
+
+        public static bool startServer(AddressFamily addressFamily, IPEndPoint localEndPoint)
+        {
+
             try
-            {
-                // Create a Socket that will use Tcp protocol
-                var listener = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                // A Socket must be associated with an endpoint using the Bind method
+            { 
+                Socket listener = new Socket(addressFamily, SocketType.Stream, ProtocolType.Tcp);
+
                 listener.Bind(localEndPoint);
-                // Specify how many requests a Socket can listen before it gives Server busy response.
-                // We will listen 10 requests at a time
-                listener.Listen(10);
 
-                Console.WriteLine("Waiting for a connection...");
-                var handler = listener.Accept(); //STOPS HERE - until the Host sends something
-                Console.WriteLine("Message came thru! processing...");
+                bool keepListening = true;
 
-                // Incoming data from the client.
-                string data = null;
-                byte[] recvdBytes = null; //received bytes
-
-                while (true)
+                while (keepListening)
                 {
-                    recvdBytes = new byte[1024];
-                    var numBytesRec = handler.Receive(recvdBytes);
-                    data += Encoding.ASCII.GetString(recvdBytes, 0, numBytesRec);
+                    listener.Listen(10);
 
-                    //if we get to "<EOF>", then end of transmission... we leave the while() loop
-                    if (data.IndexOf(END_OF_MESSAGE) > -1) break;
-                    //otherwise, we continue Receiving bits from the handler
+                    Console.WriteLine("Waiting for a connection...");
+                    Socket handler = listener.Accept(); 
+                    Console.WriteLine("Message came thru! processing...");
+
+                    string data = null;
+                    byte[] recvdBytes = null; 
+
+                    while (true)
+                    {
+                        recvdBytes = new byte[1024];
+                        var numBytesRec = handler.Receive(recvdBytes);
+                        data += Encoding.ASCII.GetString(recvdBytes, 0, numBytesRec);
+
+                        if (data.IndexOf(END_OF_MESSAGE) > -1) break;
+                    }
+
+                    Console.WriteLine("Text received : {0}", data);
+
+                    int sizeOfData = data.Length;
+                    string recvString = "";
+                    for (var i = 0; i < sizeOfData; i++) recvString += data[i];
+
+                    string cmdString = "";
+                    int counter = 0;
+
+                    while (recvString[counter] != SPACE[0]
+                        && recvString[counter] != END_OF_MESSAGE[0])
+                    //get all letters of command id until we hit a space or end of message
+                    {
+                        cmdString += recvString.Substring(counter, counter + 1);
+                        counter++;
+                    }
+
+                    //get cmd id
+                    int command = Int32.Parse(cmdString);
+
+                    //take off cmd id of string:
+                    recvString = recvString.Substring(counter, recvString.Length - cmdString.Length);
+                    if (recvString[0] == SPACE[0]) //remove space..
+                        recvString = recvString.Substring(SPACE.Length, recvString.Length - SPACE.Length);
+
+                    byte[] msgToSend = new byte[0]; //we will overwrite this memory allocation..
+
+                    //take off end of message:
+                    recvString = recvString.Substring(0, recvString.Length - END_OF_MESSAGE.Length);
+
+
+                    switch (command)
+                    {
+                        case (int)HostOperation.REGISTER:
+                            msgToSend = Encoding.ASCII.GetBytes(registerUser(recvString));
+                            break;
+                        case (int)HostOperation.LOGIN:
+                            //gets userId, generates otp from seed (saved in , and verify with client's otp
+                            break;
+                        case (int)HostOperation.EXIT:
+                            keepListening = false;
+                            break;
+                        default:
+                            Console.WriteLine("error! received bad command id...");
+                            break;
+                    }
+
+                    handler.Send(msgToSend);
+                    handler.Shutdown(SocketShutdown.Send);
+                    handler.Close();
                 }
-
-                Console.WriteLine("Text received : {0}", data);
-
-                var sizeOfData = data.Length - END_OF_MESSAGE.Length;
-                var userIdString = "";
-                for (var i = 0; i < sizeOfData; i++) userIdString += data[i];
-
-                var userId = int.Parse(userIdString);
-
-                var rnd = new Random();
-                var randomSeed = rnd.Next(1, 100); // we can make the size bigger... just dont want issues..
-
-                //add to table..
-                lst.Add(new DataBlock(userId, randomSeed));
-
-                //to send - convert everything to string
-                var msgToSend = Encoding.ASCII.GetBytes(
-                    userId + " " + randomSeed + END_OF_MESSAGE);
-                //use a "_" to differ btw the numbers..
-                handler.Send(msgToSend);
-                handler.Shutdown(SocketShutdown.Both);
-                handler.Close();
+                //listener.Shutdown(SocketShutdown.Receive);
+                listener.Close();
             }
+
             catch (Exception e)
             {
                 Console.WriteLine(e.ToString());
             }
 
-            Console.WriteLine("\n Press any key to continue...");
-            Console.ReadKey();
+            return true;
+        }
+
+        public static string registerUser(string receivedMsg)
+        //registers User, generates and sends random seed for OTP
+        //returns msg to send back to Client (Host)
+        {
+            var userId = int.Parse(receivedMsg);
+
+            var rnd = new Random();
+            var randomSeed = rnd.Next(1, 100);
+
+            lstDataBlock.Add(new DataBlock(userId, randomSeed));
+
+            return randomSeed + END_OF_MESSAGE;
+        }
+
+        public static byte[] getOTP(int seed)
+        {
+            // get the otp based on the seed and the time
+            int hour = 60 * 60;  // number of seconds in hour 
+            long current_time = DateTimeOffset.Now.ToUnixTimeSeconds();
+            int time_slot = (int)(current_time / hour);
+
+            long the_calculate_seed = time_slot * seed;
+
+            byte[] otp = new SHA1Managed().ComputeHash(
+                BitConverter.GetBytes(the_calculate_seed)
+                );
+            return otp;
         }
     }
 }

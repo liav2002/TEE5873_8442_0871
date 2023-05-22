@@ -1,4 +1,5 @@
 package TEE_8442_0871;
+import com.intel.crypto.HashAlg;
 import com.intel.util.*;
 
 //
@@ -11,15 +12,16 @@ import com.intel.util.*;
 public class TEE_8442_0871 extends IntelApplet {
 	FlashStorageAPI fsInstance = FlashStorageAPI.getInstance();
 
-
-
-    //Response Codes:
+	
+	//Response Codes:
     final int RES_FAIL_NOT_LOGGED_IN = 0; //tried to make enum, but didnt work...
     final int RESPONSE_SUCCESS = 1;
     final int RES_FAIL_NO_KEY_GENERATED = 2;
     final int RES_KEY_ALREADY_GENERATED = 3;
 
-
+    final int SET_SEED = 8;
+    final int GET_OTP = 9;
+    
     /**
      * This method will be called by the VM when a new session is opened to the Trusted Application
      * and this Trusted Application instance is being created to handle the new session.
@@ -45,11 +47,31 @@ public class TEE_8442_0871 extends IntelApplet {
      * @return the return value should not be used by the applet
      */
     public int invokeCommand(int id, byte[] seed) {
+    	DebugPrint.printString("Received cmd Id: " + commandId + ".");
+        if (recvBuffer != null) {
 
-        DebugPrint.printString("Received user Id: " + id + ".");
-        if (seed != null) {
             DebugPrint.printString("Received buffer:");
-            DebugPrint.printBuffer(seed);
+            DebugPrint.printBuffer(recvBuffer);
+
+            //first number holds the command id....
+            switch (commandId) {
+                case (int)SET_SEED: //set Seed
+                {
+                    int buffIntArr[] = Utils.convertByteArrToIntArr(recvBuffer);
+                    fsInstance.setSeed(Utils.convertIntToByteArr(buffIntArr[0]));
+                    break;
+                }
+                case (int)GET_OTP: //GET_OTP
+                {
+                    int seed = Utils.convertByteArrToIntArr(fsInstance.getSeed())[0];
+                    //receives the current EPOCH time in the buffer, converts to long...
+                    long buffLongArr[] = Utils.convertByteArrToLongArr(recvBuffer);
+                    sendResponse(RESPONSE_SUCCESS, calcOTP(seed, buffLongArr[0]));
+                }
+                break;
+                default:
+                    break;
+            }
         }
 
         /*
@@ -60,6 +82,34 @@ public class TEE_8442_0871 extends IntelApplet {
          */
         return APPLET_SUCCESS;
     }
+    
+    /**
+    *
+    * @param seed - received from flashStorage..
+    * @param timeEpoch - received from Host, standard Epoch & Unix Timestamp
+    * @return OTP in byte[] to send back to Host
+    */
+   public byte[] calcOTP(int seed, long timeEpoch) {
+
+       int numSecInHr = 3600;
+
+       byte[] res = new byte[6 * 4]; 
+
+       Calendar cal = Calendar.getInstance(Calendar.CLOCK_SOURCE_PRTC, new TimeZone((byte) 3, false, false));
+
+       long numMiliSec1970 = timeEpoch;
+
+       System.currentTimeMillis(); 
+
+       byte[] metaDataOfConfig = new byte[Calendar.SET_TIME_INFO_LENGTH];
+
+       cal.setTime((int)numMiliSec1970, metaDataOfConfig, 0);
+       String forDebug = cal.toString();
+       int debug = cal.getTime(metaDataOfConfig, 0);
+       int timeSlot = cal.getTime(metaDataOfConfig, 0)/numSecInHr;
+
+       HashAlg hashObj = HashAlg.create(HashAlg.HASH_TYPE_SHA1);
+   }
 
 
     //sends response code, with empty byte[]
