@@ -156,6 +156,14 @@ public class Utils {
         return abc;
     }
     
+    public static byte[] concatArrays(byte[] a, byte[] b) {
+        byte[] ab = new byte[a.length + b.length];
+        int j = 0;
+        for (int i = 0; i < a.length; i++) ab[j++] = a[i];
+        for (int i = 0; i < b.length; i++) ab[j++] = b[i];
+        return ab;
+    }
+    
     /**
      * split arrays
      */
