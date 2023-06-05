@@ -10,8 +10,22 @@ import com.intel.util.*;
 // **************************************************************************************************
 
 public class TEE_8442_0871 extends IntelApplet {	
-	//Response Codes:
+	FlashStorage fs = FlashStorageAPI.getInstance();
+	boolean isLoggedIn = false;
+	
+	// OPERATION REQUEST CODES, HOST -> APPLET:
+	final int RESET_MEMORY = 0; // Applet will delete all flash sotrage data.
+	final int GET_PASSWORD = 1; // Host sends URL, if Applet has no password save, generates password and return.
+	final int GET_ALL_PASSWORDS = 2; // Applet return all passwords.
+	final int SIGN_IN = 3; // Sign in operation. if success -> isLoggedIn = True.
+    final int REGISTER = 4; // Register operation. -> Master password will be set for the next sign in.
     
+    // OPERATION RESPONSE CODES, APPLET -> HOST:
+    final int RES_FAILED = 0;
+    final int RES_SUCCESS = 1;
+    final int RES_NOT_SIGNED_IN = 2;
+    final int RES_NOT_REGISTERED = 3;
+    final int RES_WRONG_PASSWORD = 4;
     
     /**
      * This method will be called by the VM when a new session is opened to the Trusted Application
@@ -39,13 +53,89 @@ public class TEE_8442_0871 extends IntelApplet {
      */
     public int invokeCommand(int id, byte[] seed) {
     	DebugPrint.printString("Received cmd Id: " + commandId + ".");
-        if (recvBuffer != null) {
+        
+    	if (recvBuffer != null) {
             DebugPrint.printString("Received buffer:");
             DebugPrint.printBuffer(recvBuffer);
 
             //first number holds the command id....
             switch (commandId) {
-                
+	            case RESET_MEMORY:
+	            {
+	            	if(!isLoggedIn)
+	            	{
+	            		sendEmptyResponse(RES_NOT_SIGNED_IN);
+	            	}
+	            	
+	            	else
+	            	{
+	            		DebugPrint.printString("Should rest the flash storge.");
+	            	}  
+	            	
+            		break;
+	            }
+	            
+	            case GET_PASSWORD:
+	            {
+	            	if(!isLoggedIn)
+	            	{
+	            		sendEmptyResponse(RES_NOT_SIGNED_IN);
+	            	}
+	            	
+	            	else
+	            	{
+	            		DebugPrint.printString("Should get relevant password according to request.");
+	            	}
+	            	
+	            	break;
+	            }
+	            
+	            case GET_ALL_PASSWORDS:
+	            {
+	            	if(!isLoggedIn)
+	            	{
+	            		sendEmptyResponse(RES_NOT_SIGNED_IN);
+	            	}
+	            	
+	            	else
+	            	{
+	            		DebugPrint.printString("Should return all saved passwords.");
+	            	}
+	            	
+            		break;
+	            }
+	            
+	            case SIGN_IN:
+	            {
+	            	if(!fs.isRegistered())
+	            	{
+	            		sendEmptyResponse(RES_NOT_REGISTERED);
+	            	}
+	            	
+	            	else if (fs.isValidPass(request))
+	            	{
+	            		isLoggedIn = true;
+	            		sendEmptyResponse(RES_SUCCESS);
+	            	}
+	            	
+	            	else
+	            	{
+	            		sendEmptyResponse(RES_WRONG_PASSWORD);
+	            	}
+	            	
+	            	break;
+	            }
+	            	
+	            case REGISTER:
+	            {
+	            	fs.setPassword(request);
+	            	isLoggedIn = true;
+	            	sendEmptyResponse(RES_SUCCESS);
+	            	break;
+	            }
+	            
+	            default:
+	            	sendEmptyResponse(RES_FAILED);
             }
         }
 
