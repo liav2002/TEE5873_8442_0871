@@ -16,8 +16,9 @@ public class PasswordVaultApplet extends IntelApplet {
 	// OPERATION REQUEST CODES, HOST -> APPLET:
 	final int RESET_MEMORY = 0; // Applet will delete all flash sotrage data.
 	final int GET_PASSWORD = 1; // Host sends URL, if Applet has no password save, generates password and return.
-	final int SIGN_IN = 2; // Sign in operation. if success -> isLoggedIn = True.
-    final int REGISTER = 3; // Register operation. -> Master password will be set for the next sign in.
+	final int GET_USERNAME = 2; // Host sends URL, Applet sent username.
+	final int SIGN_IN = 3; // Sign in operation. if success -> isLoggedIn = True.
+    final int REGISTER = 4; // Register operation. -> Master password will be set for the next sign in.
     
     // OPERATION RESPONSE CODES, APPLET -> HOST:
     final int RES_FAILED = 0;
@@ -25,6 +26,8 @@ public class PasswordVaultApplet extends IntelApplet {
     final int RES_NOT_SIGNED_IN = 2;
     final int RES_NOT_REGISTERED = 3;
     final int RES_WRONG_PASSWORD = 4;
+    final int RES_NEW_PSWD = 5;
+    final int RES_USERNAME_MISSING = 6;
     
     /**
      * This method will be called by the VM when a new session is opened to the Trusted Application
@@ -68,7 +71,8 @@ public class PasswordVaultApplet extends IntelApplet {
 	            	
 	            	else
 	            	{
-	            		DebugPrint.printString("Should rest the flash storge.");
+	            		fs.resetData();
+	            		sendEmptyResponse(RES_SUCCESS);
 	            	}  
 	            	
             		break;
@@ -83,10 +87,33 @@ public class PasswordVaultApplet extends IntelApplet {
 	            	
 	            	else
 	            	{
-	            		DebugPrint.printString("Should get relevant password according to request.");
+	            		byte[] password = fs.getPassword(request); // the request should be the specific url.
+	            		
+	            		if(password == null)
+	            		{
+	            			sendResponse(RES_NEW_PSWD, Utils.convertByte(PasswordGenerator.generateRandomPassword(10)));
+	            		}
 	            	}
 	            	
 	            	break;
+	            }
+	            
+	            case GET_USERNAME:
+	            {
+	            	if(!isLoggedIn)
+	            	{
+	            		sendEmptyResponse(RES_NOT_SIGNED_IN);
+	            	}
+	            	
+	            	else
+	            	{
+	            		byte[] username = fs.getUsername(request); // the request should be the specific url.
+	            		
+	            		if(username == null)
+	            		{
+	            			sendEmptyResponse(RES_USERNAME_MISSING);
+	            		}
+	            	}
 	            }
 	            
 	            case SIGN_IN:
@@ -173,4 +200,7 @@ public class PasswordVaultApplet extends IntelApplet {
         DebugPrint.printString("Goodbye, DAL!");
         return APPLET_SUCCESS;
     }
+    
+    /* My Additional Methods */
+   
 }
