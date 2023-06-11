@@ -47,7 +47,18 @@ public class FlashStorageAPI {
     
     public void resetData()
     {
-    	// TODO: Implement
+    	if(existsData())
+    	{
+    		FlashStorage.eraseFlashData(DATA_CODE);
+    	}
+    	if(isRegistered())
+    	{
+    		FlashStorage.eraseFlashData(PASSWORD_CODE);
+    	}
+    	size = 0;
+    	passwords = LinkedList.create();
+    	urls = LinkedList.create();
+    	usernames = LinkedList.create();
     }
     
     /**
