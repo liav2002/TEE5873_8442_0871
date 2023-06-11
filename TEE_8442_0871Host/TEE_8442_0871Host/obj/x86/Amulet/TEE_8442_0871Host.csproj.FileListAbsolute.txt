@@ -1,8 +1,0 @@
-C:\Users\liavm\OneDrive - g.jct.ac.il\Year C\Semester B\Systems for running code in a safe environment - Einav Barak\TEE5873_8442_0871\TEE_8442_0871Host\TEE_8442_0871Host\bin\Amulet\TEE_8442_0871Host.exe
-C:\Users\liavm\OneDrive - g.jct.ac.il\Year C\Semester B\Systems for running code in a safe environment - Einav Barak\TEE5873_8442_0871\TEE_8442_0871Host\TEE_8442_0871Host\bin\Amulet\TEE_8442_0871Host.pdb
-C:\Users\liavm\OneDrive - g.jct.ac.il\Year C\Semester B\Systems for running code in a safe environment - Einav Barak\TEE5873_8442_0871\TEE_8442_0871Host\TEE_8442_0871Host\bin\Amulet\JhiSharp.dll
-C:\Users\liavm\OneDrive - g.jct.ac.il\Year C\Semester B\Systems for running code in a safe environment - Einav Barak\TEE5873_8442_0871\TEE_8442_0871Host\TEE_8442_0871Host\obj\x86\Amulet\TEE_8442_0871Host.csproj.AssemblyReference.cache
-C:\Users\liavm\OneDrive - g.jct.ac.il\Year C\Semester B\Systems for running code in a safe environment - Einav Barak\TEE5873_8442_0871\TEE_8442_0871Host\TEE_8442_0871Host\obj\x86\Amulet\TEE_8442_0871Host.csproj.CoreCompileInputs.cache
-C:\Users\liavm\OneDrive - g.jct.ac.il\Year C\Semester B\Systems for running code in a safe environment - Einav Barak\TEE5873_8442_0871\TEE_8442_0871Host\TEE_8442_0871Host\obj\x86\Amulet\TEE_8442_0871Host.csproj.CopyComplete
-C:\Users\liavm\OneDrive - g.jct.ac.il\Year C\Semester B\Systems for running code in a safe environment - Einav Barak\TEE5873_8442_0871\TEE_8442_0871Host\TEE_8442_0871Host\obj\x86\Amulet\TEE_8442_0871Host.exe
-C:\Users\liavm\OneDrive - g.jct.ac.il\Year C\Semester B\Systems for running code in a safe environment - Einav Barak\TEE5873_8442_0871\TEE_8442_0871Host\TEE_8442_0871Host\obj\x86\Amulet\TEE_8442_0871Host.pdb
