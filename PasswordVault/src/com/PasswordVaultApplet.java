@@ -16,9 +16,8 @@ public class PasswordVaultApplet extends IntelApplet {
 	// OPERATION REQUEST CODES, HOST -> APPLET:
 	final int RESET_MEMORY = 0; // Applet will delete all flash sotrage data.
 	final int GET_PASSWORD = 1; // Host sends URL, if Applet has no password save, generates password and return.
-	final int GET_ALL_PASSWORDS = 2; // Applet return all passwords.
-	final int SIGN_IN = 3; // Sign in operation. if success -> isLoggedIn = True.
-    final int REGISTER = 4; // Register operation. -> Master password will be set for the next sign in.
+	final int SIGN_IN = 2; // Sign in operation. if success -> isLoggedIn = True.
+    final int REGISTER = 3; // Register operation. -> Master password will be set for the next sign in.
     
     // OPERATION RESPONSE CODES, APPLET -> HOST:
     final int RES_FAILED = 0;
@@ -88,21 +87,6 @@ public class PasswordVaultApplet extends IntelApplet {
 	            	}
 	            	
 	            	break;
-	            }
-	            
-	            case GET_ALL_PASSWORDS:
-	            {
-	            	if(!isLoggedIn)
-	            	{
-	            		sendEmptyResponse(RES_NOT_SIGNED_IN);
-	            	}
-	            	
-	            	else
-	            	{
-	            		DebugPrint.printString("Should return all saved passwords.");
-	            	}
-	            	
-            		break;
 	            }
 	            
 	            case SIGN_IN:

@@ -110,21 +110,57 @@ public class FlashStorageAPI {
         FlashStorage.writeFlashData(DATA_CODE, Utils.convertByte(data2Save), 0, data2Save.length);
     }
     
-    public void addData(byte[] password, byte[] url, byte[] usernames)
+    public void addData(byte[] password, byte[] url, byte[] username)
     {
-    	// TODO: Implement.
+    	byte[] fixedPassword = Utils.padZeros(password, NUM_BYTE_IN_PASSWORD);
+        byte[] fixedUrl = Utils.padZeros(url, NUM_BYTE_IN_URL);
+        byte[] fixedUsername = Utils.padZeros(username, NUM_BYTE_IN_USERNAME);
+        passwords.add(Utils.convertByte(fixedPassword));
+        urls.add(Utils.convertByte(fixedUrl));
+        usernames.add(Utils.convertByte(fixedUsername));
+        size++;
+
+        saveData();
     }
     
     public byte[] getPassword(byte[] currentUrl) 
     {
-    	// TODO: Implement.
-    	return null;
+    	Byte[] fixedUrl = Utils.convertByte(Utils.padZeros(currentUrl, NUM_BYTE_IN_URL));
+
+        Iterator<Byte[]> passIter = passwords.iterator();
+        Iterator<Byte[]> urlIter = urls.iterator();
+        
+        Byte[] pass;
+        Byte[] url;
+        
+        while (passIter.hasNext()) {
+            url = urlIter.next();
+            pass = passIter.next();
+            if(Utils.equals(url, fixedUrl))
+                return Utils.convertByte(pass);
+        }
+
+        return null;  // if not found
     }
     
     public byte[] getUsername(byte[] currentUrl)
     {
-    	// TODO: Implement.
-    	return null;
+    	Byte[] fixedUrl = Utils.convertByte(Utils.padZeros(currentUrl, NUM_BYTE_IN_URL));
+
+        Iterator<Byte[]> usernameIter = usernames.iterator();
+        Iterator<Byte[]> urlIter = urls.iterator();
+        
+        Byte[] username;
+        Byte[] url;
+        
+        while (usernameIter.hasNext()) {
+            url = urlIter.next();
+            username = usernameIter.next();
+            if(Utils.equals(url, fixedUrl))
+                return Utils.convertByte(username);
+        }
+
+        return null;  // if not found
     }
     
     public LinkedList<Byte[]> getPasswords()
@@ -135,12 +171,6 @@ public class FlashStorageAPI {
     public int getNumOfPasswords()
     {
         return passwords.size();
-    }
-    
-    public byte[] getAllPasswords() 
-    {
-    	// TODO: Implement.
-    	return null;
     }
     
     public boolean isValidPass(byte[] pass2check)
