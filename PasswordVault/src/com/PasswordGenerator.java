@@ -1,11 +1,12 @@
 package com;
 
-import java.util.LinkedList;
-import java.util.Random;
+import com.intel.crypto.Random;
+import com.intel.langutil.Iterator;
+import com.intel.langutil.LinkedList;
 
 public class PasswordGenerator {
     public static Byte[] generateRandomPassword(int length) {
-        LinkedList<Byte> password = new LinkedList<Byte>();
+        LinkedList<Byte> password =LinkedList.create();
 
         // Create a character pool combining all required character types
         Byte[] lowercaseChars = Utils.convertByte("abcdefghijklmnopqrstuvwxyz".getBytes());
@@ -19,10 +20,9 @@ public class PasswordGenerator {
         password.add(getRandomElementFrom(numbers));
         password.add(getRandomElementFrom(specialChars));
         
-        Random random = new Random();
         // Generate the remaining characters randomly
         for (int i = 4; i < length; i++) {
-        	int code = random.nextInt(4);
+        	int code = customNextInt(4);
         	switch (code)
         	{
 	        	case 0:
@@ -49,9 +49,9 @@ public class PasswordGenerator {
         }
 
         // Shuffle the password characters
-        Byte[] shuffledPassword = password.toArray(new Byte[0]);
+        Byte[] shuffledPassword = linkedListToByteArray(password);
         for (int i = shuffledPassword.length - 1; i > 0; i--) {
-            int j = random.nextInt(i + 1);
+            int j = customNextInt(i + 1);
             Byte temp = shuffledPassword[i];
             shuffledPassword[i] = shuffledPassword[j];
             shuffledPassword[j] = temp;
@@ -61,9 +61,29 @@ public class PasswordGenerator {
     }
 
     private static Byte getRandomElementFrom(Byte[] array) {
-        Random random = new Random();
-        int randomIndex = random.nextInt(array.length);
+        int randomIndex = customNextInt(array.length);
         Byte randomElement = array[randomIndex];
         return randomElement;
+    }
+    
+    private static int customNextInt(int n) {
+        byte[] randomBytes = new byte[2];
+        Random.getRandomBytes(randomBytes, (short) 0, (short) 2);
+        
+        int randomValue = ((randomBytes[0] & 0xFF) << 8) | (randomBytes[1] & 0xFF);
+        
+        return Math.abs(randomValue) % (n + 1);
+    }
+    
+    public static Byte[] linkedListToByteArray(LinkedList<Byte> linkedList) {
+        Byte[] byteArray = new Byte[linkedList.size()];
+        int index = 0;
+        
+        Iterator<Byte> iter = linkedList.getIterator();
+        while (iter.hasNext()) {
+            byteArray[index++] = iter.getNext();
+        }
+
+        return byteArray;
     }
 }

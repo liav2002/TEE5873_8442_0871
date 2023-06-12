@@ -1,7 +1,7 @@
 package com;
 
-import java.util.LinkedList;
-import java.util.Iterator;
+import com.intel.langutil.Iterator;
+import com.intel.langutil.LinkedList;
 import com.intel.util.FlashStorage;
 
 public class FlashStorageAPI {
@@ -19,9 +19,9 @@ public class FlashStorageAPI {
 	final int SLOT_SIZE = NUM_BYTE_IN_PASSWORD + NUM_BYTE_IN_URL + NUM_BYTE_IN_USERNAME;
 	
 	// Local variables
-	LinkedList<Byte[]> passwords = new LinkedList<Byte[]>();
-	LinkedList<Byte[]> urls = new LinkedList<Byte[]>();
-	LinkedList<Byte[]> usernames = new LinkedList<Byte[]>();
+	LinkedList<Byte[]> passwords = LinkedList.create();
+	LinkedList<Byte[]> urls = LinkedList.create();
+	LinkedList<Byte[]> usernames = LinkedList.create();
 	int size = 0; //num pairs of urls and password.
 	
 	// This is a singleton pattern.
@@ -91,9 +91,9 @@ public class FlashStorageAPI {
     
     public void saveData()
     {
-    	Iterator<Byte[]> passIter = passwords.iterator();
-        Iterator<Byte[]> urlIter = urls.iterator();
-        Iterator<Byte[]> usernamesIter = usernames.iterator();
+    	Iterator<Byte[]> passIter = passwords.getIterator();
+        Iterator<Byte[]> urlIter = urls.getIterator();
+        Iterator<Byte[]> usernamesIter = usernames.getIterator();
         
         Byte[] data2Save = new Byte[size * SLOT_SIZE];
         
@@ -101,9 +101,9 @@ public class FlashStorageAPI {
         
         while(passIter.hasNext())
         {
-        	Utils.place(data2Save, passIter.next(), i * SLOT_SIZE);
-        	Utils.place(data2Save, urlIter.next(), i * SLOT_SIZE + NUM_BYTE_IN_PASSWORD);
-        	Utils.place(data2Save, usernamesIter.next(), i * SLOT_SIZE + NUM_BYTE_IN_PASSWORD + NUM_BYTE_IN_URL);
+        	Utils.place(data2Save, passIter.getNext(), i * SLOT_SIZE);
+        	Utils.place(data2Save, urlIter.getNext(), i * SLOT_SIZE + NUM_BYTE_IN_PASSWORD);
+        	Utils.place(data2Save, usernamesIter.getNext(), i * SLOT_SIZE + NUM_BYTE_IN_PASSWORD + NUM_BYTE_IN_URL);
         	i++;
         }
         
@@ -127,15 +127,15 @@ public class FlashStorageAPI {
     {
     	Byte[] fixedUrl = Utils.convertByte(Utils.padZeros(currentUrl, NUM_BYTE_IN_URL));
 
-        Iterator<Byte[]> passIter = passwords.iterator();
-        Iterator<Byte[]> urlIter = urls.iterator();
+        Iterator<Byte[]> passIter = passwords.getIterator();
+        Iterator<Byte[]> urlIter = urls.getIterator();
         
         Byte[] pass;
         Byte[] url;
         
         while (passIter.hasNext()) {
-            url = urlIter.next();
-            pass = passIter.next();
+            url = urlIter.getNext();
+            pass = passIter.getNext();
             if(Utils.equals(url, fixedUrl))
                 return Utils.convertByte(pass);
         }
@@ -147,15 +147,15 @@ public class FlashStorageAPI {
     {
     	Byte[] fixedUrl = Utils.convertByte(Utils.padZeros(currentUrl, NUM_BYTE_IN_URL));
 
-        Iterator<Byte[]> usernameIter = usernames.iterator();
-        Iterator<Byte[]> urlIter = urls.iterator();
+        Iterator<Byte[]> usernameIter = usernames.getIterator();
+        Iterator<Byte[]> urlIter = urls.getIterator();
         
         Byte[] username;
         Byte[] url;
         
         while (usernameIter.hasNext()) {
-            url = urlIter.next();
-            username = usernameIter.next();
+            url = urlIter.getNext();
+            username = usernameIter.getNext();
             if(Utils.equals(url, fixedUrl))
                 return Utils.convertByte(username);
         }
@@ -184,7 +184,5 @@ public class FlashStorageAPI {
 
         // write to the FlaseStorage
         FlashStorage.writeFlashData(PASSWORD_CODE, pass, 0, pass.length);
-    }
-    
-    
+    } 
 }

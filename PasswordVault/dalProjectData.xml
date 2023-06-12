@@ -3,12 +3,12 @@
 <properties>
 <entry key="com.dal.pedal.dalHostProjectLocation">C:\Users\liavm\OneDrive - g.jct.ac.il\Year C\Semester B\Systems for running code in a safe environment - Einav Barak\TEE5873_8442_0871\PasswordVaultHost</entry>
 <entry key="com.dal.pedal.dalRunOption">VS</entry>
-<entry key="com.dal.pedal.dalProjectVersion">DAL_10</entry>
+<entry key="com.dal.pedal.dalProjectVersion">DAL_7</entry>
 <entry key="com.dal.pedal.dalMainClassPackage">com</entry>
 <entry key="com.dal.pedal.dalHostProjectName">PasswordVaultHost</entry>
 <entry key="com.dal.pedal.vsVersion">VS2019</entry>
-<entry key="com.dal.pedal.dalSupportedPlatfom">24</entry>
+<entry key="com.dal.pedal.dalSupportedPlatfom">11</entry>
 <entry key="com.dal.pedal.dalMainClassName">PasswordVaultApplet</entry>
-<entry key="com.dal.pedal.dalUUID">d945f73b-1c16-4273-ab91-8ff79d7ebf38</entry>
-<entry key="com.dal.pedal.dalActiveManifest">24</entry>
+<entry key="com.dal.pedal.dalUUID">df22bf3d-ccde-454d-97ab-8fec28f6805d</entry>
+<entry key="com.dal.pedal.dalActiveManifest">11</entry>
 </properties>

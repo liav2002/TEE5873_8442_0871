@@ -10,13 +10,13 @@
 	<!-- The name of the project (in Eclipse) -->
 	<property name="project_name" 						value="PasswordVault"/>
 	<!-- The build directory - note that the .jeff and .pack files in this directory will be deleted -->
-	<property name="bin_dir" 							location="C:\Users\liavm\OneDrive - g.jct.ac.il\Year C\Semester B\Systems for running code in a safe environment - Einav Barak\TEE5873_8442_0871\PasswordVault\bin\ME15.0"/>
+	<property name="bin_dir" 							location="C:\Users\liavm\OneDrive - g.jct.ac.il\Year C\Semester B\Systems for running code in a safe environment - Einav Barak\TEE5873_8442_0871\PasswordVault\bin\ME11.0"/>
 	<!-- Project directory -->
 	<property name="project_dir" 						value="C:/Users/liavm/OneDrive - g.jct.ac.il/Year C/Semester B/Systems for running code in a safe environment - Einav Barak/TEE5873_8442_0871/PasswordVault"/>
 	<!-- Intel DAL SDK directory -->
 	<property name="sdk_dir" 							value="C:\DALsdk\"/> 
 	<!-- Location of the DAL compilation tools -->
-	<property name="tools_location" 					value="${sdk_dir}\Platforms\ME15.0\PlatformTools"/> 
+	<property name="tools_location" 					value="${sdk_dir}\Platforms\ME11.0\PlatformTools"/> 
 	<!-- Location of the bhc tool -->
 	<property name="bhc_tool" 								value="${tools_location}\BhcTool\bhc.exe"/> 
 	<!-- Set to true if compiling in debug mode, false otherwise -->
@@ -24,9 +24,9 @@
 	<!-- The suffix of the .dalp file ; is set when the applet is compiled in debug mode -->
 	<property name="debug_output_suffix" 				value="-debug"/>	
 	<!-- Path to the applet jeff file -->
-	<property name="jeff_output_file" value="${bin_dir}\${project_name}_ME15.0.jeff"/>
+	<property name="jeff_output_file" value="${bin_dir}\${project_name}_ME11.0.jeff"/>
 	<!-- Path to the ProGuard jar file -->
-	<property name="jar_output_file" value="${bin_dir}\${project_name}_ME15.0.jar"/>
+	<property name="jar_output_file" value="${bin_dir}\${project_name}_ME11.0.jar"/>
 	
 	<!-- Set the debug property if needed -->
 	<target name="setProps">	
