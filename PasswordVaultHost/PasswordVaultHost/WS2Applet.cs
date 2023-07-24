@@ -121,5 +121,10 @@ namespace PasswordVaultHost
                 
             return res;
         }
+
+        public static string GetPortName()
+        {
+            return typeof(WS2Applet).Name;
+        }
     }
 }
