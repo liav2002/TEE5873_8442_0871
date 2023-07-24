@@ -1,0 +1,99 @@
+/* selects all elements... */
+*, *::before, *::after {
+    box-sizing: border-box;
+    /* sets default fonts */
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    font-weight: normal;
+}
+
+body {
+    /* remove padding and margin - so that background fills entire screen.. */
+    padding: 0;
+    margin: 0;
+    /* changes color, starts from left to right: */
+    background: linear-gradient(#00FF6C, #00AAFF);
+}
+
+/* accesses the object we made before */
+.app-grid {
+    display: grid;
+    justify-content: center;
+    /* very important!! aligns content as one block, not as random floating buttons.. */
+    align-content: center;
+    /* (instead of align-items: center;) */
+    /* fill 100% of the screen with the object... */
+    min-height: 50vh;
+    min-width: 125vh;
+    /* 100 pixels wide, repeats the pattern of 4 boxes... some items will span 2 boxes */
+    grid-template-columns: repeat(2, 150px);
+    /* rows - can extend to fit the content... */
+    /* repeat five times - for five different rows of boxes... */
+    grid-template-rows: minmax(120px, auto) repeat(3, 50px);
+}
+
+    /* add styles for all buttons.. */
+    .app-grid > button {
+        cursor: pointer;
+        font-size: 1rem;
+        /* add 1 pixels border around the buttons... */
+        border: 1px solid white;
+        outline: none;
+        /* only 75% opaque... */
+        background-color: rgba(255, 255, 255, .75);
+    }
+
+        /* create eventhandler for when user hovers over the button */
+        .app-grid > button:hover {
+            /* now changed to 90% opaque - so that when user hovers, the color of button becomes clsoer to a strong white */
+            background-color: rgba(255, 255, 255, .9);
+        }
+
+    /* allows the buttons of type "span 2" to actually span 2 blocks..
+.span-two {
+    grid-column: span 2;
+} */
+
+    .app-grid .ckbox-label {
+        font-size: .8rem;
+        font-weight: bold;
+    }
+
+.output {
+    /* define column span of output: from first column till last... */
+    grid-column: 1 / -1;
+    background-color: rgba(0, 0, 0, .75);
+    /* flex - combine to one line? */
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-around; /* <-- space-around makes the elements a little closeer than justify-content: space-between; */
+    /* so that they line up vertically: */
+    flex-direction: column;
+    /* add small margin(called padding) */
+    padding: 10px;
+    /* if word becomes too long, make it wrap around.. */
+    word-wrap: break-word;
+    /* every type of word can break... */
+    word-break: break-all;
+}
+
+
+    .output .data-url-screen {
+        color: rgba(255, 255, 255, .75);
+        font-size: 1rem;
+        border: greenyellow;
+    }
+
+    .output .data-password-screen {
+        color: white;
+        font-size: 1rem;
+    }
+
+    .output .data-msg-screen {
+        color: lightblue;
+        font-size: 1rem;
+    }
+    /* for all labels on the screen: */
+    .output > label {
+        color: cyan;
+        font-size: 1rem;
+    }

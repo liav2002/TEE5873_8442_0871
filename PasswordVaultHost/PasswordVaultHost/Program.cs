@@ -18,7 +18,7 @@ namespace PasswordVaultHost
 
             Log.print_title("SERVER CONSOLE LOG");
             Log.Default_LOG("Enter q! to stop");
-            Log.Default_LOG("WS server started on ws://127.0.0.1:" + portNumber + WS2Applet.GetPortName());
+            Log.Default_LOG("WS server started on ws://127.0.0.1:" + portNumber + "/" + WS2Applet.GetPortName());
 
             //to keep console alive..
             string x = Console.ReadLine();

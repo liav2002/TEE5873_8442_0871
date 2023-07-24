@@ -1,11 +1,16 @@
 {
   "manifest_version": 2,
-  "name": "Liav Ariel",
-  "description": "This extension is designed for Demo Perpose",
+  "name": "Password Vault - TEE",
+  "description": "Extension allows User to store and access passwords in a secure vault on their computer, in a TEE. Created by Liav Ariel and Amiad Korman at Lev Academic Institute (Jerusalem), 2023",
   "version": "1.0",
   "browser_action": {
-    "default_icon": "images/password-vault-icon.png",
+    "default_icon": "Images/password-vault-icon.png",
     "default_popup": "popup.html"
   },
-  "permissions": [ "activeTab" ]
+
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "<all_urls>"
+  ]
 } 

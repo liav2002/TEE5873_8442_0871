@@ -1,43 +1,40 @@
 <!doctype html>
 <html>
-<head>
-    <title>Liav Ariel</title>
-    <script src="popup.js"></script>
-    <style>
-        body {
-            min-width: 200px;
-            text-align: center;
-            font-family: century Gothic;
-        }
+    <head>
+        <title>Welcome to your PasswordVault</title>
+        <!-- defer means that we'll run the page after only after it's finished parsing... -->
+        <script src="popup.js" type="module" defer></script>
+        <script src="WebSocketAPI.js" type="module"></script>
+        <script src="DisplayScreen.js" type="module"></script>
+        <script src="Enums.js" type="module"></script>
+        <!-- import style sheet and scipt text:  -->
+        <link href="styles.css" rel="stylesheet">
+    </head>
+    <body>
+        <div class="app-grid">
+            <!-- "screen" of app.. -->
+            <div class="output">
+                <label output-label class="label1" for="data-url-screen">URL:</label>
+                <div data-url-screen class="data-url-screen"></div>
 
-        .button {
-            background-color: #4CAF50;
-            border: none;
-            color: white;
-            padding: 5px 14px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            margin: 4px 2px;
-            transition-duration: 0.4s;
-            cursor: pointer;
-        }
+                <label output-label class="label2" for="data-password-screen">PASSWORD:</label>
+                <div data-password-screen class="data-password-screen"></div>
 
-        .button2 {
-            background-color: white;
-            color: black;
-            border: 2px solid #008CBA;
-        }
+                <label output-label class="label3" for="data-msg-screen">MESSAGE:</label>
+                <div data-msg-screen class="data-msg-screen"></div>
+            </div>
 
-            .button2:hover {
-                background-color: #008CBA;
-                color: white;
-            }
-    </style>
-</head>
-<body>
-    <h2>Hi, I'm <strong>Liav Ariel from 8200</strong></h2>
-    <a href="https://www.google.com/search?q=8200 Idrishi" id="checkPage" class="button button2">Find me on Google</a>
-</body>
-</html>  
+            <!-- buttons.. -->
+            <button data-register>register</button>
+            <button data-sign-in>sign in</button>
+            <button data-get-password>get Password</button>
+            <button data-get-username>get Username</button>
+            <button data-connect-to-socket> connect to Websocket</button>
+            <button data-reset-memory> reset memory</button>
+            <label ckbox-label class="ckbox-label" for="ckbox_running_chrome">check if running on chrome</label>
+            <input type="checkbox" id="ckbox_running_chrome">
+            <label ckbox-label2 class="ckbox-label" for="ckbox_connected_to_server">connected to server</label>
+            <input type="checkbox" id="ckbox_connected_to_server">
+        </div>
+    </body>
+</html>
