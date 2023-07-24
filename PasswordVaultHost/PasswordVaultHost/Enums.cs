@@ -5,6 +5,11 @@ using System.Text;
 
 namespace PasswordVaultHost
 {
+    enum Symbols
+    { 
+        NOT_INITIATED = -1
+    }
+
     enum AppletResult
     { 
         RES_FAILED = 0,

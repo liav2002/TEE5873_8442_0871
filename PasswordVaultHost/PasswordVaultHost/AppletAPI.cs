@@ -60,5 +60,17 @@ namespace PasswordVaultHost
             Console.WriteLine("Uninstalling the applet.");
             jhi.Uninstall(appletID);
         }
+
+        public void ResetMemory()
+        {
+            byte[] recvBuff = new byte[0];
+            int responseCode = (int)PasswordVaultHost.Symbols.NOT_INITIATED;
+            int cmdId = (int)PasswordVaultHost.AppletOperation.RESET_MEMORY;
+            jhi.SendAndRecv2(session, cmdId, null, ref recvBuff, out responseCode);
+            if (responseCode == (int)PasswordVaultHost.AppletResult.RES_SUCCESS)
+                Console.WriteLine("Memory reset successfully!");
+            else
+                Console.WriteLine("Operation failed with code: " + responseCode.ToString());
+        }
     }
 }
