@@ -1,0 +1,11 @@
+{
+  "manifest_version": 2,
+  "name": "Liav Ariel",
+  "description": "This extension is designed for Demo Perpose",
+  "version": "1.0",
+  "browser_action": {
+    "default_icon": "images/password-vault-icon.png",
+    "default_popup": "popup.html"
+  },
+  "permissions": [ "activeTab" ]
+} 
