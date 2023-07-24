@@ -64,13 +64,54 @@ namespace PasswordVaultHost
         public void ResetMemory()
         {
             byte[] recvBuff = new byte[0];
-            int responseCode = (int)PasswordVaultHost.Symbols.NOT_INITIATED;
-            int cmdId = (int)PasswordVaultHost.AppletOperation.RESET_MEMORY;
+            int responseCode = (int)Symbols.NOT_INITIATED;
+            int cmdId = (int)AppletOperation.RESET_MEMORY;
             jhi.SendAndRecv2(session, cmdId, null, ref recvBuff, out responseCode);
-            if (responseCode == (int)PasswordVaultHost.AppletResult.RES_SUCCESS)
-                Console.WriteLine("Memory reset successfully!");
+            if (responseCode == (int)AppletResult.RES_SUCCESS)
+                Log.Default_LOG("Memory reset successfully!");
             else
-                Console.WriteLine("Operation failed with code: " + responseCode.ToString());
+                Log.Error_LOG("Operation failed with code: " + responseCode.ToString());
+        }
+
+        public string GetPassword(string url, out bool generated)
+        {
+            byte[] recvBuff = new byte[100];
+            int responseCode = (int)Symbols.NOT_INITIATED;
+            byte[] bytesUrl = Encoding.ASCII.GetBytes(url);
+
+            int cmdId = (int)AppletOperation.GET_PASSWORD;
+            jhi.SendAndRecv2(session, cmdId, bytesUrl, ref recvBuff, out responseCode);
+
+            generated = false;
+            if (responseCode == (int)AppletResult.RES_NOT_SIGNED_IN)
+            {
+                Log.Error_LOG("Failed to get password because user is not signed in.");
+                throw new ERROR_NotSignedIn();
+            }
+
+            else if (responseCode == (int)AppletResult.RES_NEW_PSWD)
+            {
+                Log.Default_LOG("Password generated.");
+                generated = true;
+            }
+
+            else if (responseCode == (int)AppletResult.RES_SUCCESS)
+                Log.Default_LOG("Password retrieved.");
+
+            return ConvertByteArrToString(recvBuff);
+        }
+
+        private string ConvertByteArrToString(byte[] bytes)
+        {
+            if (bytes == null || bytes.Length == 0)
+            {
+                return string.Empty;
+            }
+
+            // Use UTF-8 encoding to convert the byte array to a string
+            string result = Encoding.UTF8.GetString(bytes);
+
+            return result;
         }
     }
 }
