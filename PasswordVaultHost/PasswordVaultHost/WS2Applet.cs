@@ -25,7 +25,7 @@ namespace PasswordVaultHost
             string data = receivedMsg.Substring(CMD_ID_LENGTH);
             int commandId = getCommandId(receivedMsg);
 
-            PasswordVaultHost.Log.Default_LOG("=> Received message from Echo client: " + (ServerOperation)commandId + " " + data);
+            PasswordVaultHost.Log.Default_LOG("<== Received message from Echo client: " + (ServerOperation)commandId + " " + data);
 
             switch (commandId)
             {
@@ -106,7 +106,7 @@ namespace PasswordVaultHost
             string msgToSend = ((int)cmd + msg);
             PasswordVaultHost.Log.Default_LOG("Try send message to client.");
             Send(msgToSend);
-            PasswordVaultHost.Log.Default_LOG("=> Message sent to client: " + cmd + " " + msg);
+            PasswordVaultHost.Log.Default_LOG("==> Message sent to client: " + cmd + " " + msg);
         }
 
         private int getCommandId(string msg)
