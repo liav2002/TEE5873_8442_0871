@@ -16,9 +16,6 @@ namespace PasswordVaultHost
 
         public AppletAPI()
         {
-            /************************************************************************************************************
-             *                                              START                                                       *
-             ***********************************************************************************************************/
 #if AMULET
             // When compiled for Amulet the Jhi.DisableDllValidation flag is set to true 
             // in order to load the JHI.dll without DLL verification.
@@ -75,7 +72,7 @@ namespace PasswordVaultHost
             if (responseCode == (int)AppletResult.RES_SUCCESS)
                 Log.Default_LOG("Memory reset successfully!");
             else
-                Log.Error_LOG("Operation failed with code: " + responseCode.ToString());
+                Log.Error_LOG("'ResetMemory' Operation failed with code: " + responseCode.ToString());
         }
 
         public string GetPassword(string url, out bool generated)
@@ -107,7 +104,7 @@ namespace PasswordVaultHost
                 Log.Default_LOG("Password retrieved.");
 
             else
-                Log.Error_LOG("Operation failed with code: " + responseCode.ToString());
+                Log.Error_LOG("'GetPassword' Operation failed with code: " + responseCode.ToString());
 
             // return password
             return ConvertByteArrToString(recvBuff);
@@ -135,10 +132,30 @@ namespace PasswordVaultHost
                 Log.Default_LOG("Username retrieved.");
 
             else
-                Log.Error_LOG("Operation failed with code: " + responseCode.ToString());
+                Log.Error_LOG("'GetUsername' Operation failed with code: " + responseCode.ToString());
 
-            //return username
+            // return username
             return ConvertByteArrToString(recvBuff);
+        }
+
+        public int SignIn(string password)
+        {
+            // initialized parameters for applet operaion.
+            byte[] recvBuff = new byte[100];
+            int responseCode = (int)Symbols.NOT_INITIATED;
+            byte[] bytePassword = Encoding.ASCII.GetBytes(password);
+            int cmdId = (int)AppletOperation.SIGN_IN;
+
+            // communicate applet for make an operation.
+            jhi.SendAndRecv2(session, cmdId, bytePassword, ref recvBuff, out responseCode);
+
+            // log response messages
+            if (responseCode == (int)AppletResult.RES_SUCCESS)
+                Log.Default_LOG("Username successfully signed in.");
+            else
+                Log.Error_LOG("'SignIn' Operation failed with code: " + responseCode.ToString());
+
+            return responseCode;
         }
 
         private string ConvertByteArrToString(byte[] bytes)
