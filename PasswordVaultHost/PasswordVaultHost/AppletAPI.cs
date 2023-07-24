@@ -151,9 +151,29 @@ namespace PasswordVaultHost
 
             // log response messages
             if (responseCode == (int)AppletResult.RES_SUCCESS)
-                Log.Default_LOG("Username successfully signed in.");
+                Log.Default_LOG("User successfully signed in.");
             else
                 Log.Error_LOG("'SignIn' Operation failed with code: " + responseCode.ToString());
+
+            return responseCode;
+        }
+
+        public int Register(string newPassword)
+        {
+            // initialized parameters for applet operaion.
+            byte[] recvBuff = new byte[100];
+            int responseCode = (int)Symbols.NOT_INITIATED;
+            byte[] bytePassword = Encoding.ASCII.GetBytes(newPassword);
+            int cmdId = (int)AppletOperation.REGISTER;
+
+            // communicate applet for make an operation.
+            jhi.SendAndRecv2(session, cmdId, bytePassword, ref recvBuff, out responseCode);
+
+            // log response messages
+            if (responseCode == (int)AppletResult.RES_SUCCESS)
+                Log.Default_LOG("User successfully registered.");
+            else
+                Log.Error_LOG("'Register' Operation failed with code: " + responseCode.ToString());
 
             return responseCode;
         }
