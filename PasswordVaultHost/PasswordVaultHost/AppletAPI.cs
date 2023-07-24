@@ -5,11 +5,16 @@ using System.Text;
 
 namespace PasswordVaultHost
 {
-    class Program
+    class AppletAPI
     {
         static public JhiSession session;
         static public Jhi jhi;
-        static void Main(string[] args)
+
+        // This is the UUID of this Trusted Application (TA).
+        //The UUID is the same value as the applet.id field in the Intel(R) DAL Trusted Application manifest.
+        string appletID = "df22bf3d-ccde-454d-97ab-8fec28f6805d";
+
+        public AppletAPI()
         {
             /************************************************************************************************************
              *                                              START                                                       *
@@ -30,15 +35,10 @@ namespace PasswordVaultHost
 
             jhi = Jhi.Instance;
 
-            // This is the UUID of this Trusted Application (TA).
-            //The UUID is the same value as the applet.id field in the Intel(R) DAL Trusted Application manifest.
-            string appletID = "df22bf3d-ccde-454d-97ab-8fec28f6805d"; //string appletID = "aba19a59-bb38-4ffd-9435-2fa5057f80c6";
             // This is the path to the Intel Intel(R) DAL Trusted Application .dalp file that was created by the Intel(R) DAL Eclipse plug-in.
             string project_directory = Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.Parent.FullName;
             string dalpPath = "\\PasswordVault\\bin\\PasswordVault.dalp";
             string appletPath = project_directory + dalpPath;
-            Console.Write("$appletPath = " + project_directory + dalpPath + "\n\n");
-            //string appletPath = "C:\\Users\\liavm\\OneDrive - g.jct.ac.il\\Year C\\Semester B\\Systems for running code in a safe environment - Einav Barak\\TEE5873_8442_0871\\PasswordVault\\bin\\PasswordVault.dalp";
             
             // Install the Trusted Application
             Console.WriteLine("Installing the applet.");
@@ -48,17 +48,10 @@ namespace PasswordVaultHost
             byte[] initBuffer = new byte[] { }; // Data to send to the applet onInit function
             Console.WriteLine("Opening a session.");
             jhi.CreateSession(appletID, JHI_SESSION_FLAGS.None, initBuffer, out session);
+        }
 
-            /************************************************************************************************************
-             *                                               BODY                                                       *
-             ***********************************************************************************************************/
-
-
-
-            /************************************************************************************************************
-             *                                               END                                                        *
-             ***********************************************************************************************************/
-
+        public void Close()
+        {
             // Close the session
             Console.WriteLine("Closing the session.");
             jhi.CloseSession(session);
@@ -66,9 +59,6 @@ namespace PasswordVaultHost
             //Uninstall the Trusted Application
             Console.WriteLine("Uninstalling the applet.");
             jhi.Uninstall(appletID);
-
-            Console.WriteLine("Press Enter to finish.");
-            Console.Read();
         }
     }
 }
