@@ -63,10 +63,15 @@ namespace PasswordVaultHost
 
         public void ResetMemory()
         {
+            // initialized parameters for applet operaion.
             byte[] recvBuff = new byte[0];
             int responseCode = (int)Symbols.NOT_INITIATED;
             int cmdId = (int)AppletOperation.RESET_MEMORY;
+            
+            // communicate applet for make an operation.
             jhi.SendAndRecv2(session, cmdId, null, ref recvBuff, out responseCode);
+            
+            // log response messages
             if (responseCode == (int)AppletResult.RES_SUCCESS)
                 Log.Default_LOG("Memory reset successfully!");
             else
@@ -75,13 +80,16 @@ namespace PasswordVaultHost
 
         public string GetPassword(string url, out bool generated)
         {
+            // initialized parameters for applet operaion.
             byte[] recvBuff = new byte[100];
             int responseCode = (int)Symbols.NOT_INITIATED;
             byte[] bytesUrl = Encoding.ASCII.GetBytes(url);
-
             int cmdId = (int)AppletOperation.GET_PASSWORD;
+
+            // communicate applet for make an operation.
             jhi.SendAndRecv2(session, cmdId, bytesUrl, ref recvBuff, out responseCode);
 
+            // log response messages
             generated = false;
             if (responseCode == (int)AppletResult.RES_NOT_SIGNED_IN)
             {
@@ -98,6 +106,38 @@ namespace PasswordVaultHost
             else if (responseCode == (int)AppletResult.RES_SUCCESS)
                 Log.Default_LOG("Password retrieved.");
 
+            else
+                Log.Error_LOG("Operation failed with code: " + responseCode.ToString());
+
+            // return password
+            return ConvertByteArrToString(recvBuff);
+        }
+        
+        public string GetUsername(string url)
+        {
+            // initialized parameters for applet operaion.
+            byte[] recvBuff = new byte[100];
+            int responseCode = (int)Symbols.NOT_INITIATED;
+            byte[] bytesUrl = Encoding.ASCII.GetBytes(url);
+            int cmdId = (int)AppletOperation.GET_USERNAME;
+
+            // communicate applet for make an operation.
+            jhi.SendAndRecv2(session, cmdId, bytesUrl, ref recvBuff, out responseCode);
+
+            // log response messages
+            if (responseCode == (int)AppletResult.RES_NOT_SIGNED_IN)
+            {
+                Log.Error_LOG("Failed to get username because user is not signed in.");
+                throw new ERROR_NotSignedIn();
+            }
+
+            else if (responseCode == (int)AppletResult.RES_SUCCESS)
+                Log.Default_LOG("Username retrieved.");
+
+            else
+                Log.Error_LOG("Operation failed with code: " + responseCode.ToString());
+
+            //return username
             return ConvertByteArrToString(recvBuff);
         }
 
