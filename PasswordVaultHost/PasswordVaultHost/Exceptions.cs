@@ -22,4 +22,16 @@ namespace PasswordVaultHost
             msg = "User is not signed in.";
         }
     }
+
+    class SocketException : Exception
+    {
+        public string msg = "";
+    }
+    class ERROR_CantGetCmdId : SocketException
+    {
+        public ERROR_CantGetCmdId()
+        {
+            msg = "Can't get Command Id!";
+        }
+    }
 }

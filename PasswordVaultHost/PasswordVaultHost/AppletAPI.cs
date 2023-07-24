@@ -75,7 +75,7 @@ namespace PasswordVaultHost
                 Log.Error_LOG("'ResetMemory' Operation failed with code: " + responseCode.ToString());
         }
 
-        public string GetPassword(string url, out bool generated)
+        public string GetPassword(string url)
         {
             // initialized parameters for applet operaion.
             byte[] recvBuff = new byte[100];
@@ -87,7 +87,6 @@ namespace PasswordVaultHost
             jhi.SendAndRecv2(session, cmdId, bytesUrl, ref recvBuff, out responseCode);
 
             // log response messages
-            generated = false;
             if (responseCode == (int)AppletResult.RES_NOT_SIGNED_IN)
             {
                 Log.Error_LOG("Failed to get password because user is not signed in.");
@@ -97,7 +96,6 @@ namespace PasswordVaultHost
             else if (responseCode == (int)AppletResult.RES_NEW_PSWD)
             {
                 Log.Default_LOG("Password generated.");
-                generated = true;
             }
 
             else if (responseCode == (int)AppletResult.RES_SUCCESS)

@@ -30,4 +30,23 @@ namespace PasswordVaultHost
         REGISTER = 4
     }
 
+    enum ServerResult
+    {
+        RES_NOT_SIGNED_IN = 0,
+        RES_SUCCESS = 1,
+        RES_WRONG_PASSWORD = 2,
+        RES_PASSWORD_RETREIVED = 3,
+        RES_NOT_REGISTERED = 4,
+        RES_FAILED = 5,
+        RES_USERNAME_RETREIVED = 6
+    }
+
+    enum ServerOperation
+    {
+        REGISTER = 0,
+        SIGN_IN = 1,
+        GET_PASSWORD = 2,
+        GET_USERNAME = 3,
+        RESET_MEMORY = 4
+    }
 }
