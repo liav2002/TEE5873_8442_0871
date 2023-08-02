@@ -160,9 +160,9 @@ public class FlashStorageAPI {
     	return Utils.equals(pass2check, realPass);
     }
     
-    public void setPassword(byte[] pass) {
-
+    public void setPassword(byte[] pass) 
+    {
         // write to the FlaseStorage the access password, the master key
         FlashStorage.writeFlashData(PASSWORD_CODE, pass, 0, pass.length);
-    } 
+    }
 }

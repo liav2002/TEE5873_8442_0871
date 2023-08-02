@@ -22,6 +22,14 @@ namespace PasswordVaultHost
             msg = "User is not signed in.";
         }
     }
+    class ERROR_ResetMemoryFailed : AppletException
+    { 
+        public ERROR_ResetMemoryFailed()
+        {
+            msg = "Reset memory failed - you should see log messages.";
+        }
+    }
+
 
     class SocketException : Exception
     {

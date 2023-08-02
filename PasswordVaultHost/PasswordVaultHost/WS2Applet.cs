@@ -31,10 +31,18 @@ namespace PasswordVaultHost
             {
                 case (int)ServerOperation.REGISTER:
                 {
-                    itsAppletAPI.ResetMemory();
-                    int responseCode = itsAppletAPI.Register(data);
-                    if (responseCode == (int)AppletResult.RES_SUCCESS)
-                        send2Client(ServerResult.RES_SUCCESS, "successfully registered.");
+                    PasswordVaultHost.Log.Debug_Log("WS2Applet on Register operation.");
+                    try
+                    {
+                        itsAppletAPI.ResetMemory();
+                        int responseCode = itsAppletAPI.Register(data);
+                        if (responseCode == (int)AppletResult.RES_SUCCESS)
+                            send2Client(ServerResult.RES_SUCCESS, "successfully registered.");
+                    }
+                    catch (ERROR_ResetMemoryFailed ex)
+                    {
+                        PasswordVaultHost.Log.Error_LOG(ex.msg);
+                    }
                     break;
                 }
 
@@ -82,8 +90,15 @@ namespace PasswordVaultHost
 
                 case (int)ServerOperation.RESET_MEMORY:
                 {
-                    itsAppletAPI.ResetMemory();
-                    send2Client(ServerResult.RES_SUCCESS, "memory reset.");
+                    try
+                    {
+                        itsAppletAPI.ResetMemory();
+                        send2Client(ServerResult.RES_SUCCESS, "memory reset.");
+                    }
+                    catch (ERROR_ResetMemoryFailed ex)
+                    {
+                        PasswordVaultHost.Log.Error_LOG(ex.msg);
+                    }
                     break;
                 }
 

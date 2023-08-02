@@ -65,17 +65,17 @@ public class PasswordVaultApplet extends IntelApplet {
             switch (commandId) {
 	            case RESET_MEMORY:
 	            {
-	            	if(!isLoggedIn)
+	            	if (!fs.isRegistered() || isLoggedIn)
 	            	{
-	            		sendEmptyResponse(RES_NOT_SIGNED_IN);
+	            		fs.resetData();
+	            		sendEmptyResponse(RES_SUCCESS);
 	            	}
 	            	
 	            	else
 	            	{
-	            		fs.resetData();
-	            		sendEmptyResponse(RES_SUCCESS);
-	            	}  
-	            	
+	            		sendEmptyResponse(RES_NOT_SIGNED_IN);
+	            	}
+
             		break;
 	            }
 	            

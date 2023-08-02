@@ -25,6 +25,15 @@ namespace PasswordVaultHost
             Console.ForegroundColor = ConsoleColor.White;
         }
 
+        public static void Debug_Log(string msg)
+        {
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.Write("DEBUG_LOG: ");
+            Console.ForegroundColor = ConsoleColor.Blue;
+            Console.WriteLine(msg);
+            Console.ForegroundColor = ConsoleColor.White;
+        }
+
         public static void print_title(string title)
         {
             const string separator = "*************************"; // You can customize the separator here

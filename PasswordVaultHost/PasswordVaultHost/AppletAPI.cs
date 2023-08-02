@@ -60,6 +60,7 @@ namespace PasswordVaultHost
 
         public void ResetMemory()
         {
+            Log.Debug_Log("AppletApi on ResetMemory operation.");
             // initialized parameters for applet operaion.
             byte[] recvBuff = new byte[0];
             int responseCode = (int)Symbols.NOT_INITIATED;
@@ -72,7 +73,10 @@ namespace PasswordVaultHost
             if (responseCode == (int)AppletResult.RES_SUCCESS)
                 Log.Default_LOG("Memory reset successfully!");
             else
+            {
                 Log.Error_LOG("'ResetMemory' Operation failed with code: " + responseCode.ToString());
+                throw new ERROR_ResetMemoryFailed();
+            }
         }
 
         public string GetPassword(string url)
@@ -158,6 +162,7 @@ namespace PasswordVaultHost
 
         public int Register(string newPassword)
         {
+            Log.Debug_Log("AppletAPI on Register operation.");
             // initialized parameters for applet operaion.
             byte[] recvBuff = new byte[100];
             int responseCode = (int)Symbols.NOT_INITIATED;
