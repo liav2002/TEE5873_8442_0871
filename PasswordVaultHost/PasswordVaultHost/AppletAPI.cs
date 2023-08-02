@@ -36,25 +36,25 @@ namespace PasswordVaultHost
             string project_directory = Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.Parent.FullName;
             string dalpPath = "\\PasswordVault\\bin\\PasswordVault.dalp";
             string appletPath = project_directory + dalpPath;
-            
+
             // Install the Trusted Application
-            Console.WriteLine("Installing the applet.");
+            Log.Default_LOG("AppletApi > Installing the applet.");
             jhi.Install(appletID, appletPath);
 
             // Start a session with the Trusted Application
             byte[] initBuffer = new byte[] { }; // Data to send to the applet onInit function
-            Console.WriteLine("Opening a session.");
+            Log.Default_LOG("AppletApi > Opening a session.");
             jhi.CreateSession(appletID, JHI_SESSION_FLAGS.None, initBuffer, out session);
         }
 
         public void Close()
         {
             // Close the session
-            Console.WriteLine("Closing the session.");
+            Log.Default_LOG("AppletApi > Closing the session.");
             jhi.CloseSession(session);
 
             //Uninstall the Trusted Application
-            Console.WriteLine("Uninstalling the applet.");
+            Log.Default_LOG("AppletApi > Uninstalling the applet.");
             jhi.Uninstall(appletID);
         }
 
