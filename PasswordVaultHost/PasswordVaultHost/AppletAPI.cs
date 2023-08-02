@@ -60,7 +60,7 @@ namespace PasswordVaultHost
 
         public void ResetMemory()
         {
-            Log.Debug_Log("AppletApi on ResetMemory operation.");
+            Log.Debug_Log("AppletApi on 'ResetMemory' operation.");
             // initialized parameters for applet operaion.
             byte[] recvBuff = new byte[0];
             int responseCode = (int)Symbols.NOT_INITIATED;
@@ -76,6 +76,35 @@ namespace PasswordVaultHost
             {
                 Log.Error_LOG("'ResetMemory' Operation failed with code: " + responseCode.ToString());
                 throw new ERROR_ResetMemoryFailed();
+            }
+        }
+
+        public void AddData(string data)
+        {
+            Log.Debug_Log("AppletApi on 'AddData' operation.");
+            // initialized parameters for applet operaion.
+            byte[] recvBuff = new byte[100];
+            int responseCode = (int)Symbols.NOT_INITIATED;
+            byte[] bytesData = Encoding.ASCII.GetBytes(data);
+            int cmdId = (int)AppletOperation.ADD_DATA;
+
+            // communicate applet for make an operation.
+            jhi.SendAndRecv2(session, cmdId, bytesData, ref recvBuff, out responseCode);
+
+            // log response messages
+            if (responseCode == (int)AppletResult.RES_NOT_SIGNED_IN)
+            {
+                Log.Error_LOG("Failed to add url, username and password because user is not signed in.");
+                throw new ERROR_NotSignedIn();
+            }
+
+            else if (responseCode == (int)AppletResult.RES_SUCCESS)
+                Log.Default_LOG("url, username and password was successfuly added.");
+
+            else
+            {
+                Log.Error_LOG("'AddData' Operation failed with code: " + responseCode.ToString());
+                throw new ERROR_Unknown();
             }
         }
 
@@ -142,6 +171,7 @@ namespace PasswordVaultHost
 
         public int SignIn(string password)
         {
+            Log.Debug_Log("AppletApi on 'SignIn' operation.");
             // initialized parameters for applet operaion.
             byte[] recvBuff = new byte[100];
             int responseCode = (int)Symbols.NOT_INITIATED;
@@ -162,7 +192,7 @@ namespace PasswordVaultHost
 
         public int Register(string newPassword)
         {
-            Log.Debug_Log("AppletAPI on Register operation.");
+            Log.Debug_Log("AppletAPI on 'Register' operation.");
             // initialized parameters for applet operaion.
             byte[] recvBuff = new byte[100];
             int responseCode = (int)Symbols.NOT_INITIATED;

@@ -19,6 +19,7 @@ public class PasswordVaultApplet extends IntelApplet {
 	final int GET_USERNAME = 2; // Host sends URL, Applet sent username.
 	final int SIGN_IN = 3; // Sign in operation. if success -> isLoggedIn = True.
     final int REGISTER = 4; // Register operation. -> Master password will be set for the next sign in.
+    final int ADD_DATA = 5; // Add data operation. -> User will provide url - username - password
     
     // OPERATION RESPONSE CODES, APPLET -> HOST:
     final int RES_FAILED = 0;
@@ -79,6 +80,84 @@ public class PasswordVaultApplet extends IntelApplet {
             		break;
 	            }
 	            
+	            case ADD_DATA:
+	            {
+	            	if(!isLoggedIn)
+	            	{
+	            		sendEmptyResponse(RES_NOT_SIGNED_IN);
+	            	}
+	            	
+	            	else
+	            	{
+	            		// Parse url, username and password
+	            		byte[] url = null;
+	            		byte[] username = null;
+	            		byte[] password = null;
+	            		
+	            		int offset = 0;
+	            		
+	            		if (offset < request.length)
+	            		{
+	            			int url_size = request[offset];
+	            			offset++;
+	            			
+	            			if(offset + url_size <= request.length)
+	            			{
+	            				url = new byte[url_size];
+	            				url = Utils.sliceArray(request, offset, offset + url_size);
+	            				offset += url_size;
+	            			}
+	            		}
+	            		
+	            		if (offset < request.length)
+	            		{
+	            			int username_size = request[offset];
+	            			offset++;
+	            			
+	            			if(offset + username_size <= request.length)
+	            			{
+	            				username = new byte[username_size];
+	            				username = Utils.sliceArray(request, offset, offset + username_size);
+	            				offset += username_size;
+	            			}
+	            		}
+	            		
+	            		if (offset < request.length)
+	            		{
+	            			int password_size = request[offset];
+	            			offset++;
+	            			
+	            			if (offset + password_size <= request.length)
+	            			{
+	            				password = new byte[password_size];
+	            				password = Utils.sliceArray(request, offset, offset + password_size);
+	            				offset += password_size;
+	            			}
+	            		}
+	            		
+	            		DebugPrint.printString("url:");
+	            		DebugPrint.printBuffer(url);
+	            		DebugPrint.printString("username:");
+	            		DebugPrint.printBuffer(username);
+	            		DebugPrint.printString("password:");
+	            		DebugPrint.printBuffer(password);
+	            		
+	            		if (url != null && username != null && password != null)
+	            		{
+	            			fs.addData(url, username, password);
+	            			DebugPrint.printString("after fs");
+	            			sendEmptyResponse(RES_SUCCESS);
+	            		}
+	            		else
+	            		{
+	            			sendEmptyResponse(RES_FAILED);
+	            		}
+	            		
+	            	}
+	            	
+	            	break;
+	            }
+	            
 	            case GET_PASSWORD:
 	            {
 	            	if(!isLoggedIn)
@@ -93,6 +172,11 @@ public class PasswordVaultApplet extends IntelApplet {
 	            		if(password == null)
 	            		{
 	            			sendResponse(RES_NEW_PSWD, Utils.convertByte(PasswordGenerator.generateRandomPassword(10)));
+	            		}
+	            		
+	            		else
+	            		{
+	            			sendResponse(RES_SUCCESS, password);
 	            		}
 	            	}
 	            	
@@ -113,6 +197,11 @@ public class PasswordVaultApplet extends IntelApplet {
 	            		if(username == null)
 	            		{
 	            			sendEmptyResponse(RES_USERNAME_MISSING);
+	            		}
+	            		
+	            		else
+	            		{
+	            			sendResponse(RES_SUCCESS, username);
 	            		}
 	            	}
 	            }

@@ -31,7 +31,7 @@ namespace PasswordVaultHost
             {
                 case (int)ServerOperation.REGISTER:
                 {
-                    PasswordVaultHost.Log.Debug_Log("WS2Applet on Register operation.");
+                    PasswordVaultHost.Log.Debug_Log("WS2Applet on 'REGISTER' operation.");
                     try
                     {
                         itsAppletAPI.ResetMemory();
@@ -48,6 +48,7 @@ namespace PasswordVaultHost
 
                 case (int)ServerOperation.SIGN_IN:
                 {
+                    PasswordVaultHost.Log.Debug_Log("WS2Applet on 'SIGN_IN' operation.");
                     int responseCode = itsAppletAPI.SignIn(data);
                     if (responseCode == (int)AppletResult.RES_WRONG_PASSWORD)
                         send2Client(ServerResult.RES_WRONG_PASSWORD, "wrong password");
@@ -90,6 +91,7 @@ namespace PasswordVaultHost
 
                 case (int)ServerOperation.RESET_MEMORY:
                 {
+                    PasswordVaultHost.Log.Debug_Log("WS2Applet on 'RESET_MEMORY' operation.");
                     try
                     {
                         itsAppletAPI.ResetMemory();
@@ -102,8 +104,28 @@ namespace PasswordVaultHost
                     break;
                 }
 
+                case (int)ServerOperation.ADD_DATA:
+                {
+                    PasswordVaultHost.Log.Debug_Log("WS2Applet on 'ADD_DATA' operation.");
+                    try
+                    {
+                        itsAppletAPI.AddData(data);
+                        send2Client(ServerResult.RES_SUCCESS, "url, username and password was successfuly added.");
+                    }
+                    catch (ERROR_NotSignedIn ex)
+                    {
+                        send2Client(ServerResult.RES_NOT_SIGNED_IN, ex.msg);
+                    }
+                    catch(ERROR_Unknown ex)
+                    {
+                        send2Client(ServerResult.RES_FAILED, ex.msg);
+                    }
+                    break;
+                }
+
                 default:
                 {
+                    PasswordVaultHost.Log.Error_LOG("Unknown server operation: " + commandId.ToString());
                     send2Client(ServerResult.RES_FAILED, "unknown server operaion.");
                     break;
                 }
@@ -119,7 +141,6 @@ namespace PasswordVaultHost
         private void send2Client(ServerResult cmd, string msg)
         {
             string msgToSend = ((int)cmd + msg);
-            PasswordVaultHost.Log.Default_LOG("Try send message to client.");
             Send(msgToSend);
             PasswordVaultHost.Log.Default_LOG("==> Message sent to client: " + cmd + " " + msg);
         }

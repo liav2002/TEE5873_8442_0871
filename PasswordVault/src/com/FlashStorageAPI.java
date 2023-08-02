@@ -2,6 +2,7 @@ package com;
 
 import com.intel.langutil.Iterator;
 import com.intel.langutil.LinkedList;
+import com.intel.util.DebugPrint;
 import com.intel.util.FlashStorage;
 
 public class FlashStorageAPI {
@@ -81,30 +82,48 @@ public class FlashStorageAPI {
     	}
     }
 
-    public void addData(byte[] password, byte[] url, byte[] username)
+    public void addData(byte[] url, byte[] username, byte[] password)
     {
+    	DebugPrint.printString("Enter fs.addData");
     	// add data to local linked list.
-        passwords.add(Utils.convertByte(password));
         urls.add(Utils.convertByte(url));
+        DebugPrint.printString("add url.");
         usernames.add(Utils.convertByte(username));
+        DebugPrint.printString("add username.");
+        passwords.add(Utils.convertByte(password));
+        DebugPrint.printString("add password.");
         size++;
         
         // add data to flash storage.
         int ptr = FlashStorage.getFlashDataSize(DATA_CODE) - 1;
+        DebugPrint.printString("ptr = " + ptr);
         
     	FlashStorage.writeFlashData(DATA_CODE, Utils.convertIntToByteArr(size), 0, 1);
+    	DebugPrint.printString("rewrite size of data to flash data.");
     
     	FlashStorage.writeFlashData(DATA_CODE, Utils.convertIntToByteArr(url.length), ptr++, ptr);
-    	FlashStorage.writeFlashData(DATA_CODE, url, ptr, ptr + url.length);
+    	DebugPrint.printString("write size of url to flash data.");
+    	DebugPrint.printString("ptr = " + ptr);
+//    	FlashStorage.writeFlashData(DATA_CODE, url, ptr, ptr + url.length); <------- big problem
+    	DebugPrint.printString("write url to flash data.");
     	ptr += url.length;
+    	DebugPrint.printString("ptr = " + ptr);
     	
-    	FlashStorage.writeFlashData(DATA_CODE, Utils.convertIntToByteArr(username.length), ptr++, ptr);
-    	FlashStorage.writeFlashData(DATA_CODE, username, ptr, ptr + username.length);
-    	ptr += username.length;
+//    	FlashStorage.writeFlashData(DATA_CODE, Utils.convertIntToByteArr(username.length), ptr++, ptr);
+//    	DebugPrint.printString("write size of username to flash data.");
+//    	DebugPrint.printString("ptr = " + ptr);
+//    	FlashStorage.writeFlashData(DATA_CODE, username, ptr, ptr + username.length);
+//    	DebugPrint.printString("write username to flash data.");
+//    	ptr += username.length;
+//    	DebugPrint.printString("ptr = " + ptr);
     	
-    	FlashStorage.writeFlashData(DATA_CODE, Utils.convertIntToByteArr(password.length), ptr++, ptr);
-    	FlashStorage.writeFlashData(DATA_CODE, password, ptr, ptr + password.length);
-    	ptr += password.length;
+//    	FlashStorage.writeFlashData(DATA_CODE, Utils.convertIntToByteArr(password.length), ptr++, ptr);
+//    	DebugPrint.printString("write size of password to flash data.");
+//    	DebugPrint.printString("ptr = " + ptr);
+//    	FlashStorage.writeFlashData(DATA_CODE, password, ptr, ptr + password.length);
+//    	DebugPrint.printString("write username to flash data.");
+//    	ptr += password.length;
+//    	DebugPrint.printString("ptr = " + ptr);
     }
     
     public byte[] getPassword(byte[] currentUrl) 

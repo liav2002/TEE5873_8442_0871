@@ -27,7 +27,8 @@ namespace PasswordVaultHost
         GET_PASSWORD = 1,
         GET_USERNAME = 2,
         SIGN_IN = 3,
-        REGISTER = 4
+        REGISTER = 4,
+        ADD_DATA = 5
     }
 
     enum ServerResult
@@ -47,6 +48,7 @@ namespace PasswordVaultHost
         SIGN_IN = 1,
         GET_PASSWORD = 2,
         GET_USERNAME = 3,
-        RESET_MEMORY = 4
+        RESET_MEMORY = 4,
+        ADD_DATA = 5
     }
 }

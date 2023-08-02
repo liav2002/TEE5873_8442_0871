@@ -29,6 +29,13 @@ namespace PasswordVaultHost
             msg = "Reset memory failed - you should see log messages.";
         }
     }
+    class ERROR_Unknown : AppletException
+    {
+        public ERROR_Unknown()
+        {
+            msg = "Operation failed from unkown reason.";
+        }
+    }
 
 
     class SocketException : Exception
