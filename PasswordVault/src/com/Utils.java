@@ -1,5 +1,7 @@
 package com;
 import com.intel.crypto.HashAlg;
+import com.intel.langutil.Iterator;
+import com.intel.langutil.LinkedList;
 import com.intel.util.Calendar;
 
 public class Utils {
@@ -89,25 +91,39 @@ public class Utils {
 
     /**
      *
-     * @param length of byte[] required...
+     * @param length of byte[] required... (length < 20)
      */
     public static byte[] randomBytes(int length) {
-        byte[] result = new byte[length];
-
+        byte[] result = new byte[20];
         long numMiliSec = Calendar.getMillisFromStartup();
         byte[] input = convertLongToByteArr(numMiliSec);
+       
         HashAlg hashObj = HashAlg.create(HashAlg.HASH_TYPE_SHA1);
-        /** https://software.intel.com/sites/landingpage/dal/technology/api-reference/applet-apis/crypto/Hash-api_level6.html
-         * short processComplete(byte[] input,
-         short inputIndex,
-         short inputLength,
-         byte[] outputArray,
-         short outputIndex)
-         */
         hashObj.processComplete(input, (short)0, (short)input.length, result, (short)0);
-
-        return result;
+       
+        return Utils.sliceArray(result, 0, length);
     }
+    
+    public static Byte[] linkedListToByteArray(LinkedList<Byte> linkedList) {
+        Byte[] byteArray = new Byte[linkedList.size()];
+        int index = 0;
+
+        Iterator<Byte> iter = linkedList.getIterator();
+        while (iter.hasNext()) {
+            byteArray[index++] = iter.getNext();
+        }
+
+        return byteArray;
+    }
+    
+    public static int byteArrayToInt(byte[] bytes) {
+        int value = 0;
+        for (int i = 0; i < bytes.length; i++) {
+            value += (bytes[i] & 0xFF) << (8 * (bytes.length - 1 - i));
+        }
+        return value;
+    }
+    
 
     /**
      * Convert an integer to a byte array
@@ -125,6 +141,50 @@ public class Utils {
         }
         return res;
     }
+    
+    /**
+     * Split data according spaces
+     *
+     * @param data The data to split.
+     * @return 2-d byte array represent the splitData.
+     */
+    public static byte[][] splitBySpace(byte[] data) {
+        int wordCount = 0;
+
+        // Count the number of words in the data
+        for (int i = 0; i < data.length; i++) {
+            if (data[i] == ' ') {
+                wordCount++;
+            }
+        }
+        // Account for the last word
+        wordCount++;
+
+        byte[][] result = new byte[wordCount][];
+
+        int startIndex = 0;
+        int wordIndex = 0;
+
+        // Split the data into words
+        for (int i = 0; i < data.length; i++) {
+            if (data[i] == ' ') {
+                int wordLength = i - startIndex;
+                result[wordIndex] = new byte[wordLength];
+                result[wordIndex] = Utils.sliceArray(data, startIndex, startIndex + wordLength);
+                startIndex = i + 1;
+                wordIndex++;
+            }
+        }
+
+        // Handle the last word
+        int lastWordLength = data.length - startIndex;
+        result[wordIndex] = new byte[lastWordLength];
+        result[wordIndex] = Utils.sliceArray(data, startIndex, startIndex + lastWordLength);
+
+        return result;
+    }
+    
+    
     /**
      * Convert a long to a byte array
      * @param num The long to convert to a byte array.

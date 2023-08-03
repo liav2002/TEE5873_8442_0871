@@ -1,8 +1,7 @@
 package com;
 
-import com.intel.crypto.Random;
-import com.intel.langutil.Iterator;
 import com.intel.langutil.LinkedList;
+import com.intel.util.DebugPrint;
 
 public class PasswordGenerator {
     public static Byte[] generateRandomPassword(int length) {
@@ -49,7 +48,7 @@ public class PasswordGenerator {
         }
 
         // Shuffle the password characters
-        Byte[] shuffledPassword = linkedListToByteArray(password);
+        Byte[] shuffledPassword = Utils.linkedListToByteArray(password);
         for (int i = shuffledPassword.length - 1; i > 0; i--) {
             int j = customNextInt(i + 1);
             Byte temp = shuffledPassword[i];
@@ -67,23 +66,8 @@ public class PasswordGenerator {
     }
     
     private static int customNextInt(int n) {
-        byte[] randomBytes = new byte[2];
-        Random.getRandomBytes(randomBytes, (short) 0, (short) 2);
-        
-        int randomValue = ((randomBytes[0] & 0xFF) << 8) | (randomBytes[1] & 0xFF);
-        
-        return Math.abs(randomValue) % (n + 1);
-    }
-    
-    public static Byte[] linkedListToByteArray(LinkedList<Byte> linkedList) {
-        Byte[] byteArray = new Byte[linkedList.size()];
-        int index = 0;
-        
-        Iterator<Byte> iter = linkedList.getIterator();
-        while (iter.hasNext()) {
-            byteArray[index++] = iter.getNext();
-        }
-
-        return byteArray;
+    	byte[] randomBytes = Utils.randomBytes(4);  // You can adjust the length as needed
+    	int randomValue = Utils.byteArrayToInt(randomBytes);
+        return Math.abs(randomValue) % n;
     }
 }

@@ -29,6 +29,11 @@ public class PasswordVaultApplet extends IntelApplet {
     final int RES_WRONG_PASSWORD = 4;
     final int RES_NEW_PSWD = 5;
     final int RES_USERNAME_MISSING = 6;
+    final int RES_MISSING_PARAMETERS = 7;
+    final int RES_PASSWORD_MISSING = 8;
+    
+    // Constant for random password
+    final int DEFAULT_PASS_LEN = 10;
     
 	/**
 	 * This method will be called by the VM when a new session is opened to the Trusted Application 
@@ -89,69 +94,23 @@ public class PasswordVaultApplet extends IntelApplet {
 	            	
 	            	else
 	            	{
-	            		// Parse url, username and password
-	            		byte[] url = null;
-	            		byte[] username = null;
-	            		byte[] password = null;
+	            		byte[][] splitData = Utils.splitBySpace(request);
 	            		
-	            		int offset = 0;
-	            		
-	            		if (offset < request.length)
+	            		if (splitData.length == 3) // regular request
 	            		{
-	            			int url_size = request[offset];
-	            			offset++;
-	            			
-	            			if(offset + url_size <= request.length)
-	            			{
-	            				url = new byte[url_size];
-	            				url = Utils.sliceArray(request, offset, offset + url_size);
-	            				offset += url_size;
-	            			}
-	            		}
-	            		
-	            		if (offset < request.length)
-	            		{
-	            			int username_size = request[offset];
-	            			offset++;
-	            			
-	            			if(offset + username_size <= request.length)
-	            			{
-	            				username = new byte[username_size];
-	            				username = Utils.sliceArray(request, offset, offset + username_size);
-	            				offset += username_size;
-	            			}
-	            		}
-	            		
-	            		if (offset < request.length)
-	            		{
-	            			int password_size = request[offset];
-	            			offset++;
-	            			
-	            			if (offset + password_size <= request.length)
-	            			{
-	            				password = new byte[password_size];
-	            				password = Utils.sliceArray(request, offset, offset + password_size);
-	            				offset += password_size;
-	            			}
-	            		}
-	            		
-	            		DebugPrint.printString("url:");
-	            		DebugPrint.printBuffer(url);
-	            		DebugPrint.printString("username:");
-	            		DebugPrint.printBuffer(username);
-	            		DebugPrint.printString("password:");
-	            		DebugPrint.printBuffer(password);
-	            		
-	            		if (url != null && username != null && password != null)
-	            		{
-	            			fs.addData(url, username, password);
-	            			DebugPrint.printString("after fs");
+	            			fs.addData(splitData[0], splitData[1], splitData[2]);
 	            			sendEmptyResponse(RES_SUCCESS);
+	            		}
+	            		else if(splitData.length == 2) // want to use password generator
+	            		{
+	            			fs.addData(splitData[0], splitData[1], Utils.convertByte(PasswordGenerator.generateRandomPassword(DEFAULT_PASS_LEN)));
+	            			sendEmptyResponse(RES_NEW_PSWD);
 	            		}
 	            		else
 	            		{
-	            			sendEmptyResponse(RES_FAILED);
+	            			sendEmptyResponse(RES_MISSING_PARAMETERS);
 	            		}
+	            		
 	            		
 	            	}
 	            	
@@ -171,7 +130,7 @@ public class PasswordVaultApplet extends IntelApplet {
 	            		
 	            		if(password == null)
 	            		{
-	            			sendResponse(RES_NEW_PSWD, Utils.convertByte(PasswordGenerator.generateRandomPassword(10)));
+	            			sendEmptyResponse(RES_PASSWORD_MISSING);
 	            		}
 	            		
 	            		else
@@ -204,6 +163,8 @@ public class PasswordVaultApplet extends IntelApplet {
 	            			sendResponse(RES_SUCCESS, username);
 	            		}
 	            	}
+	            	
+	            	break;
 	            }
 	            
 	            case SIGN_IN:

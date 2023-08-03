@@ -63,6 +63,7 @@ namespace PasswordVaultHost
 
                 case (int)ServerOperation.GET_PASSWORD:
                 {
+                    PasswordVaultHost.Log.Debug_Log("WS2Applet on 'GET_PASSWORD' operation.");
                     try
                     {
                         string msg = itsAppletAPI.GetPassword(data);
@@ -72,11 +73,20 @@ namespace PasswordVaultHost
                     {
                         send2Client(ServerResult.RES_NOT_SIGNED_IN, ex.msg);
                     }
+                    catch (ERROR_Unknown ex)
+                    {
+                        send2Client(ServerResult.RES_FAILED, ex.msg);
+                    }
+                    catch (ERROR_Password_Missing ex)
+                    {
+                        send2Client(ServerResult.RES_FAILED, ex.msg);
+                    }
                     break;
                 }
 
                 case (int)ServerOperation.GET_USERNAME:
                 {
+                    PasswordVaultHost.Log.Debug_Log("WS2Applet on 'GET_USERNAME' operation.");
                     try
                     {
                         string msg = itsAppletAPI.GetUsername(data);
@@ -85,6 +95,14 @@ namespace PasswordVaultHost
                     catch (ERROR_NotSignedIn ex)
                     {
                         send2Client(ServerResult.RES_NOT_SIGNED_IN, ex.msg);
+                    }
+                    catch (ERROR_Unknown ex)
+                    {
+                        send2Client(ServerResult.RES_FAILED, ex.msg);
+                    }
+                    catch (ERROR_Username_Missing ex)
+                    {
+                        send2Client(ServerResult.RES_FAILED, ex.msg);
                     }
                     break;
                 }
@@ -119,6 +137,10 @@ namespace PasswordVaultHost
                     catch(ERROR_Unknown ex)
                     {
                         send2Client(ServerResult.RES_FAILED, ex.msg);
+                    }
+                    catch(ERROR_Missing_parameters ex)
+                    {
+                        send2Client(ServerResult.RES_MISSING_PARAMETERS, ex.msg);
                     }
                     break;
                 }

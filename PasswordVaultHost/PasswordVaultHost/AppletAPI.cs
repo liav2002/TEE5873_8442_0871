@@ -98,8 +98,17 @@ namespace PasswordVaultHost
                 throw new ERROR_NotSignedIn();
             }
 
+            else if (responseCode == (int)AppletResult.RES_MISSING_PARAMETERS)
+            {
+                Log.Error_LOG("Failed to add data, becaues of missing parameters.");
+                throw new ERROR_Missing_parameters();
+            }
+
             else if (responseCode == (int)AppletResult.RES_SUCCESS)
                 Log.Default_LOG("url, username and password was successfuly added.");
+
+            else if (responseCode == (int)AppletResult.RES_NEW_PSWD)
+                Log.Default_LOG("url, username and password was successfuly added. (new password generated).");
 
             else
             {
@@ -110,6 +119,7 @@ namespace PasswordVaultHost
 
         public string GetPassword(string url)
         {
+            Log.Debug_Log("AppletApi on 'GetPassword' operation.");
             // initialized parameters for applet operaion.
             byte[] recvBuff = new byte[100];
             int responseCode = (int)Symbols.NOT_INITIATED;
@@ -126,16 +136,20 @@ namespace PasswordVaultHost
                 throw new ERROR_NotSignedIn();
             }
 
-            else if (responseCode == (int)AppletResult.RES_NEW_PSWD)
+            else if (responseCode == (int)AppletResult.RES_PASSWORD_MISSING)
             {
-                Log.Default_LOG("Password generated.");
+                Log.Error_LOG("Failed to get password because url is not found.");
+                throw new ERROR_Password_Missing(url);
             }
 
             else if (responseCode == (int)AppletResult.RES_SUCCESS)
                 Log.Default_LOG("Password retrieved.");
 
             else
+            {
                 Log.Error_LOG("'GetPassword' Operation failed with code: " + responseCode.ToString());
+                throw new ERROR_Unknown();
+            }
 
             // return password
             return ConvertByteArrToString(recvBuff);
@@ -143,6 +157,7 @@ namespace PasswordVaultHost
         
         public string GetUsername(string url)
         {
+            Log.Debug_Log("AppletApi on 'GetUsername' operation.");
             // initialized parameters for applet operaion.
             byte[] recvBuff = new byte[100];
             int responseCode = (int)Symbols.NOT_INITIATED;
@@ -159,11 +174,20 @@ namespace PasswordVaultHost
                 throw new ERROR_NotSignedIn();
             }
 
+            else if (responseCode == (int)AppletResult.RES_USERNAME_MISSING)
+            {
+                Log.Error_LOG("Failed to get username because url is not found.");
+                throw new ERROR_Username_Missing(url);
+            }
+
             else if (responseCode == (int)AppletResult.RES_SUCCESS)
                 Log.Default_LOG("Username retrieved.");
 
             else
+            {
                 Log.Error_LOG("'GetUsername' Operation failed with code: " + responseCode.ToString());
+                throw new ERROR_Unknown();
+            }
 
             // return username
             return ConvertByteArrToString(recvBuff);

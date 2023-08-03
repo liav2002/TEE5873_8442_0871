@@ -36,6 +36,29 @@ namespace PasswordVaultHost
             msg = "Operation failed from unkown reason.";
         }
     }
+    class ERROR_Missing_parameters : AppletException
+    { 
+        public ERROR_Missing_parameters()
+        {
+            msg = "Some parameters are missing.";
+        }
+    }
+    class ERROR_Username_Missing : AppletException
+    {
+        public ERROR_Username_Missing(string url)
+        {
+            msg = "Username for " + url + " is not found.";
+        }
+    }
+    class ERROR_Password_Missing : AppletException
+    {
+        public ERROR_Password_Missing(string url)
+        {
+            msg = "Password for " + url + " is not found.";
+        }
+    }
+
+
 
 
     class SocketException : Exception
