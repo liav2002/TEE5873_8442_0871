@@ -23,7 +23,16 @@ namespace PasswordVaultHost
         {
             string receivedMsg = e.Data;
             string data = receivedMsg.Substring(CMD_ID_LENGTH);
-            int commandId = getCommandId(receivedMsg);
+            int commandId = (int)Symbols.NOT_INITIATED;
+
+            try
+            {
+                commandId = getCommandId(receivedMsg);
+            }
+            catch(ERROR_CantGetCmdId ex)
+            {
+                PasswordVaultHost.Log.Error_LOG(ex.Message);
+            }
 
             PasswordVaultHost.Log.Default_LOG("<== Received message from Echo client: " + (ServerOperation)commandId + " " + data);
 
