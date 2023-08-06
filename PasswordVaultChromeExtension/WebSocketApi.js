@@ -1,8 +1,7 @@
 export class WebSocketApi {
-    constructor(displayScreenElement) {
+    constructor() {
         this.socketToServer;
         this.MsgFromServer = "";
-        this.myDisplayScreen = displayScreenElement;
         this.isConnected = false;
     }
 
@@ -11,11 +10,16 @@ export class WebSocketApi {
     }
 
     initialize(webSocketAddress) {
+        const usernameScreenTextElement = document.getElementById('data-username-screen');
+        const passwordScreenTextElement = document.getElementById('data-password-screen');
+        const msgScreenTextElement = document.getElementById('data-msg-screen');
+
+        usernameScreenTextElement.textContent = "";
+        passwordScreenTextElement.textContent = "";
+        msgScreenTextElement.textContent = "connecting...";
+
         this.socketToServer = new WebSocket(webSocketAddress);
-        this.myDisplayScreen.displayText("trying to connect..");
-        //add callback from receiving a message:
-        this.socketToServer.onmessage = this.onMessageCallback;
-        //isInitialized field will be set when we receive our first message from the Server...
+        this.socketToServer.onmessage = this.onMessageCallback.bind(this);
     }
 
     //this function contains callbacks for receiving messages from the Server
@@ -48,12 +52,13 @@ export class WebSocketApi {
             case ServerResult.RES_MISSING_PARAMETERS.name:
             case ServerResult.RES_PASSWORD_MISSING.name:
             case ServerResult.RES_URL_EXISTS.name: {
-                this.myDisplayScreen.displayText(event.data.substring(lengthOfCommandId, (event.data).length));
+                const msgScreenTextElement = document.getElementById('data-msg-screen');
+                msgScreenTextElement.textContent = event.data.substring(lengthOfCommandId, (event.data).length);
             }
                 break;
             case ServerResult.RES_SUCCESS.name: {
-                this.myDisplayScreen.displayText(event.data.substring(lengthOfCommandId, (event.data).length));
-
+                const msgScreenTextElement = document.getElementById('data-msg-screen');
+                msgScreenTextElement.textContent = event.data.substring(lengthOfCommandId, (event.data).length);
                 if (this.isConnected === false) {
                     this.isConnected = true;
                 }
@@ -61,12 +66,20 @@ export class WebSocketApi {
                 break;
             case ServerResult.RES_PASSWORD_RETREIVED.name: {
                 const passwordFromServer = event.data.substring(lengthOfCommandId, dataLength + 1);
-                this.myDisplayScreen.displayText(event.data.substring(dataLength + 1), "", passwordFromServer);
+                const msgScreenTextElement = document.getElementById('data-msg-screen');
+                const passwordScreenTextElement = document.getElementById('data-password-screen');
+
+                msgScreenTextElement.textContent = event.data.substring(dataLength + 1);
+                passwordScreenTextElement.textContent = passwordFromServer;
             }
                 break;
             case ServerResult.RES_USERNAME_RETREIVEDR.name: {
                 const usernameFromServer = event.data.substring(lengthOfCommandId, dataLength + 1);
-                this.myDisplayScreen.displayText(event.data.substring(dataLength + 1), usernameFromServer, "");
+                const msgScreenTextElement = document.getElementById('data-msg-screen');
+                const usernameScreenTextElement = document.getElementById('data-username-screen');
+
+                msgScreenTextElement.textContent = event.data.substring(dataLength + 1);
+                usernameScreenTextElement.textContent = usernameFromServer;
             }
                 break;
 

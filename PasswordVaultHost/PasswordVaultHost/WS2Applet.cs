@@ -16,7 +16,7 @@ namespace PasswordVaultHost
         {
             base.OnOpen();
             PasswordVaultHost.Log.Default_LOG("Client opened a socket.");
-            send2Client(ServerResult.RES_SUCCESS, "Successfullt connected to Server!");
+            send2Client(ServerResult.RES_SUCCESS, "Successfully connected to Server!");
         }
 
         protected override void OnMessage(MessageEventArgs e)
@@ -78,7 +78,8 @@ namespace PasswordVaultHost
                     try
                     {
                         string msg = itsAppletAPI.GetPassword(data);
-                        send2Client(ServerResult.RES_PASSWORD_RETREIVED, msg);
+                        string trimmedMsg = msg.TrimEnd('\0');
+                        send2Client(ServerResult.RES_PASSWORD_RETREIVED, trimmedMsg);
                     }
                     catch (ERROR_NotSignedIn ex)
                     {
@@ -101,7 +102,8 @@ namespace PasswordVaultHost
                     try
                     {
                         string msg = itsAppletAPI.GetUsername(data);
-                        send2Client(ServerResult.RES_USERNAME_RETREIVED, msg);
+                        string trimmedMsg = msg.TrimEnd('\0');
+                        send2Client(ServerResult.RES_USERNAME_RETREIVED, trimmedMsg);
                     }
                     catch (ERROR_NotSignedIn ex)
                     {

@@ -1,5 +1,4 @@
 import { WebSocketApi } from './WebSocketApi.js'
-import { DisplayScreen } from './DisplayScreen.js'
 
 class ServerOperation {
     static REGISTER = new ServerOperation("0");
@@ -26,15 +25,20 @@ const submitButton = document.getElementById('submit');
 
 // screen:
 const urlScreenTextElement = document.getElementById('data-url-screen');
-const usernameScreenTextElement = document.getElementById('data-username-screen');
-const passwordScreenTextElement = document.getElementById('data-password-screen');
-const msgScreenTextElement = document.getElementById('data-msg-screen');
+
+chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    const currentTab = tabs[0];
+    const currentUrl = currentTab.url;
+    const urlObject = new URL(currentUrl);
+    const domain = urlObject.hostname;
+    const domainWithoutWww = domain.replace(/^www\./, '');
+    urlScreenTextElement.textContent = domainWithoutWww;
+});
 
 // objects:
 const popup = document.getElementById('popup');
-const myDisplayScreen = new DisplayScreen(urlScreenTextElement, usernameScreenTextElement, passwordScreenTextElement, msgScreenTextElement);
-const websockethandler = new WebSocketApi(myDisplayScreen);
-const socketName = "ws://127.0.0.1:5789//WS2Applet";
+const websockethandler = new WebSocketApi();
+const socketName = "ws://127.0.0.1:5789/WS2Applet";
 
 // string messages:
 const alreadyConnected = "already connected to the Server!";
@@ -51,8 +55,16 @@ registerButton.addEventListener('click', button => {
     }
 
     if (confirm("Registering will erase any memory. Are you sure that you want to Register anyway?")) {
-        const textFromScreen = prompt("Please Enter a Password:");
+        const textFromScreen = prompt("Please enter a new password:");
         websockethandler.sendMsgToServer(ServerOperation.REGISTER.name + textFromScreen);
+
+        const msgScreenTextElement = document.getElementById('data-msg-screen');
+        const usernameScreenTextElement = document.getElementById('data-username-screen');
+        const passwordScreenTextElement = document.getElementById('data-password-screen');
+
+        msgScreenTextElement.textContent = "";
+        usernameScreenTextElement.textContent = "";
+        passwordScreenTextElement.textContent = "";
     }
 });
 
@@ -62,7 +74,7 @@ signInButton.addEventListener('click', button => {
         return;
     }
     //must get text from screen!
-    const textFromScreen = prompt("Please Enter a Password:");
+    const textFromScreen = prompt("Please enter a password:");
     websockethandler.sendMsgToServer(ServerOperation.SIGN_IN.name + textFromScreen);
 });
 
@@ -97,14 +109,26 @@ addDataButton.addEventListener('click', button => {
 
 submitButton.addEventListener('click', () => {
     const urlInput = urlScreenTextElement.textContent;
-    const usernameInput = document.getElementById('username-input').value;
-    const passwordInput = document.getElementById('password-input').value;
+    const usernameInput = document.getElementById('username-input').value.trim();
+    const passwordInput = document.getElementById('password-input').value.trim();
 
-    // Processing the input values
-    websockethandler.sendMsgToServer(ToServerOperation.ADD_DATA.name + urlInput + " " + usernameInput + " " + passwordInput);
+    if (usernameInput == '') {
+        alert("Username is missing !!");
+    }
 
-    // Close the popup
-    popup.style.display = 'none';
+    else {
+        // Processing the input values
+        if (passwordInput == '') {
+            websockethandler.sendMsgToServer(ServerOperation.ADD_DATA.name + urlInput + " " + usernameInput);
+        }
+
+        else {
+            websockethandler.sendMsgToServer(ServerOperation.ADD_DATA.name + urlInput + " " + usernameInput + " " + passwordInput);
+        }
+
+        // Close the popup
+        popup.style.display = 'none';
+    }
 });
 
 resetMemoryButton.addEventListener('click', button => {
@@ -112,7 +136,15 @@ resetMemoryButton.addEventListener('click', button => {
         alert(mustconnect);
         return;
     }
-    websockethandler.sendMsgToServer(ToServerOperation.RESET_MEMORY.name);
+    websockethandler.sendMsgToServer(ServerOperation.RESET_MEMORY.name);
+
+    const msgScreenTextElement = document.getElementById('data-msg-screen');
+    const usernameScreenTextElement = document.getElementById('data-username-screen');
+    const passwordScreenTextElement = document.getElementById('data-password-screen');
+
+    msgScreenTextElement.textContent = "";
+    usernameScreenTextElement.textContent = "";
+    passwordScreenTextElement.textContent = "";
 });
 
 connectToWebSocketButton.addEventListener('click', button => {
