@@ -110,6 +110,12 @@ namespace PasswordVaultHost
             else if (responseCode == (int)AppletResult.RES_NEW_PSWD)
                 Log.Default_LOG("url, username and password was successfuly added. (new password generated).");
 
+            else if (responseCode == (int)AppletResult.RES_URL_EXISTS)
+            {
+                Log.Error_LOG("Url is already exists.");
+                throw new ERROR_Url_Exists();
+            }
+
             else
             {
                 Log.Error_LOG("'AddData' Operation failed with code: " + responseCode.ToString());

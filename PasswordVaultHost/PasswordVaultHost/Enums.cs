@@ -20,7 +20,8 @@ namespace PasswordVaultHost
         RES_NEW_PSWD = 5,
         RES_USERNAME_MISSING = 6,
         RES_MISSING_PARAMETERS = 7,
-        RES_PASSWORD_MISSING = 8
+        RES_PASSWORD_MISSING = 8,
+        RES_URL_EXISTS = 9
     }
 
     enum AppletOperation
@@ -43,7 +44,8 @@ namespace PasswordVaultHost
         RES_FAILED = 5,
         RES_USERNAME_RETREIVED = 6,
         RES_MISSING_PARAMETERS = 7,
-        RES_PASSWORD_MISSING = 8
+        RES_PASSWORD_MISSING = 8,
+        RES_URL_EXISTS = 9
     }
 
     enum ServerOperation

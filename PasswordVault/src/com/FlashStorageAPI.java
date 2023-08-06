@@ -137,6 +137,21 @@ public class FlashStorageAPI {
         saveData();
     }
     
+    public boolean isUrlExistsForUsername(byte[] currentUrl)
+    {
+    	Byte[] fixedUrl = Utils.convertByte(Utils.padZeros(currentUrl, NUM_BYTE));
+    	Iterator<Byte[]> urlIter = urls.getIterator();
+    	Byte[] url;
+    	
+    	while (urlIter.hasNext()) {
+            url = urlIter.getNext();
+            if(Utils.equals(url, fixedUrl))
+                return true;
+        }
+    	
+    	return false;
+    }
+    
     public byte[] getPassword(byte[] currentUrl) 
     {
     	Byte[] fixedUrl = Utils.convertByte(Utils.padZeros(currentUrl, NUM_BYTE));

@@ -31,6 +31,7 @@ public class PasswordVaultApplet extends IntelApplet {
     final int RES_USERNAME_MISSING = 6;
     final int RES_MISSING_PARAMETERS = 7;
     final int RES_PASSWORD_MISSING = 8;
+    final int RES_URL_EXISTS = 9;
     
     // Constant for random password
     final int DEFAULT_PASS_LEN = 10;
@@ -96,7 +97,12 @@ public class PasswordVaultApplet extends IntelApplet {
 	            	{
 	            		byte[][] splitData = Utils.splitBySpace(request);
 	            		
-	            		if (splitData.length == 3) // regular request
+	            		if(splitData.length >= 2 && fs.isUrlExistsForUsername(splitData[0]))
+	            		{
+	            			sendEmptyResponse(RES_URL_EXISTS); // if url is already exists, handle this case.
+	            		}
+	            		
+	            		else if (splitData.length == 3) // regular request
 	            		{
 	            			fs.addData(splitData[0], splitData[1], splitData[2]);
 	            			sendEmptyResponse(RES_SUCCESS);

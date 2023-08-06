@@ -151,7 +151,12 @@ namespace PasswordVaultHost
                     {
                         send2Client(ServerResult.RES_MISSING_PARAMETERS, ex.msg);
                     }
-                    break;
+                    catch (ERROR_Url_Exists ex)
+                    {
+                        send2Client(ServerResult.RES_URL_EXISTS, ex.msg);
+                    }
+
+                        break;
                 }
 
                 default:

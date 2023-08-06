@@ -1,7 +1,6 @@
 package com;
 
 import com.intel.langutil.LinkedList;
-import com.intel.util.DebugPrint;
 
 public class PasswordGenerator {
     public static Byte[] generateRandomPassword(int length) {

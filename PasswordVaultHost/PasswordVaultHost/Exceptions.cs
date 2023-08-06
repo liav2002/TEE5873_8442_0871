@@ -58,8 +58,13 @@ namespace PasswordVaultHost
         }
     }
 
-
-
+    class ERROR_Url_Exists : AppletException
+    { 
+        public ERROR_Url_Exists()
+        {
+            msg = "Url is already exists in data. (In this version updating data is not allowed).";
+        }
+    }
 
     class SocketException : Exception
     {
