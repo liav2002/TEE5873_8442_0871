@@ -51,7 +51,9 @@ namespace PasswordVaultHost
                     catch (ERROR_ResetMemoryFailed ex)
                     {
                         PasswordVaultHost.Log.Error_LOG(ex.msg);
+                        send2Client(ServerResult.RES_NOT_SIGNED_IN, "It is not possible to register because there is already a registered user.");
                     }
+
                     break;
                 }
 
