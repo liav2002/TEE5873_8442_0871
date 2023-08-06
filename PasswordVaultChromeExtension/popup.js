@@ -2,12 +2,12 @@ import { WebSocketApi } from './WebSocketApi.js'
 import { DisplayScreen } from './DisplayScreen.js'
 
 class ServerOperation {
-    static REGISTER = new ToServerOperation("0");
-    static SIGN_IN = new ToServerOperation("1");
-    static GET_PASSWORD = new ToServerOperation("2");
-    static GET_USERNAME = new ToServerOperation("3");
-    static RESET_MEMORY = new ToServerOperation("4");
-    static ADD_DATA = new ToServerOperation("5");
+    static REGISTER = new ServerOperation("0");
+    static SIGN_IN = new ServerOperation("1");
+    static GET_PASSWORD = new ServerOperation("2");
+    static GET_USERNAME = new ServerOperation("3");
+    static RESET_MEMORY = new ServerOperation("4");
+    static ADD_DATA = new ServerOperation("5");
 
     constructor(name) {
         this.name = name;
@@ -72,7 +72,7 @@ getPasswordButton.addEventListener('click', button => {
         return;
     }
 
-    const domain_name = urlScreenTextElement.innerText;
+    const domain_name = urlScreenTextElement.textContent;
     websockethandler.sendMsgToServer(ServerOperation.GET_PASSWORD.name + domain_name);
 });
 
@@ -82,7 +82,7 @@ getUsernameButton.addEventListener('click', button => {
         return;
     }
 
-    const domain_name = urlScreenTextElement.innerText;
+    const domain_name = urlScreenTextElement.textContent;
     websockethandler.sendMsgToServer(ServerOperation.GET_USERNAME.name + domain_name);
 });
 
@@ -96,7 +96,7 @@ addDataButton.addEventListener('click', button => {
 });
 
 submitButton.addEventListener('click', () => {
-    const urlInput = urlScreenTextElement.innerText;
+    const urlInput = urlScreenTextElement.textContent;
     const usernameInput = document.getElementById('username-input').value;
     const passwordInput = document.getElementById('password-input').value;
 

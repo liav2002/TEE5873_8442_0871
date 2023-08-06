@@ -8,21 +8,24 @@ export class DisplayScreen {
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             const currentTab = tabs[0];
             const currentUrl = currentTab.url;
-            this.urlScreenTextElement.innerText = currentUrl;
+            const urlObject = new URL(currentUrl);
+            const domain = urlObject.hostname;
+            const domainWithoutWww = domain.replace(/^www\./, '');
+            this.urlScreenTextElement.textContent = domainWithoutWww;
         });
 
         this.clear();
     }
 
     displayText(msg, username = "", password = "") {
-        this.usernameScreenTextElement.innerText = username;
-        this.passwordScreenTextElement.innerText = password;
-        this.msgScreenTextElement.innerText = msg;
+        this.usernameScreenTextElement.textContent = username;
+        this.passwordScreenTextElement.textContent = password;
+        this.msgScreenTextElement.textContent = msg;
     }
 
     clear() {
-        this.usernameScreenTextElement.innerText = '';
-        this.passwordScreenTextElement.innerText = '';
-        this.msgScreenTextElement.innerText = '';
+        this.usernameScreenTextElement.textContent = '';
+        this.passwordScreenTextElement.textContent = '';
+        this.msgScreenTextElement.textContent = '';
     }
 }
