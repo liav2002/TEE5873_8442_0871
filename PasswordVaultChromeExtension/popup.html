@@ -1,4 +1,58 @@
 <!doctype html>
 <html>
+<head>
+    <title>PasswordVault V1.0</title>
+    <!-- defer means that we'll run the page after only after it's finished parsing... -->
+    <script src="popup.js" type="module" defer></script>
+    <script src="WebSocketApi.js" type="module"></script>
+    <script src="DisplayScreen.js" type="module"></script>
+    <!-- import style sheet and scipt text:  -->
+    <link href="styles.css" rel="stylesheet">
+</head>
 
-</html>  
+<body>
+    <div class="app-grid">
+        <!-- "screen" of app.. -->
+        <div class="output">
+            <label output-label class="label1" for="data-url-screen">URL:</label>
+            <div id="data-url-screen" class="data-url-screen"></div>
+
+            <label output-label class="label2" for="data-username-screen">USERNAME:</label>
+            <div id="data-username-screen" class="data-username-screen"></div>
+
+            <label output-label class="label3" for="data-password-screen">PASSWORD:</label>
+            <div id="data-password-screen" class="data-password-screen"></div>
+
+            <label output-label class="label4" for="data-msg-screen">MESSAGE:</label>
+            <div id="data-msg-screen" class="data-msg-screen"></div>
+        </div>
+
+        <!-- buttons.. -->
+        <div class="button-container">
+            <button data-register id="button-register">Register</button>
+            <button data-sign-in id="button-sign-in">Sign In</button>
+        </div>
+        <div class="button-container">
+            <button data-get-password id="button-get-password">Get Password</button>
+            <button data-get-username id="button-get-username">Get Username</button>
+        </div>
+        <div class="button-container">
+            <button data-add-data id="button-add-data">Add Data</button>
+            <button data-reset-memory id="button-reset-memory">Reset Memory</button>
+        </div>
+        <div class="button-container" data-connect-to-socket>
+            <button id="button-connect-to-socket">Connect to Websocket</button>
+        </div>
+    </div>
+
+    <!-- popup windows -->
+    <div id="popup" class="popup">
+        <div class="popup-content">
+            <h2>Fill Details</h2>
+            <input type="text" id="username-input" placeholder="Username">
+            <input type="text" id="password-input" placeholder="Password (can be automatic generated).">
+            <button id="submit">Submit</button>
+        </div>
+    </div>
+</body>
+</html>
