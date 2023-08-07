@@ -205,19 +205,14 @@ public class FlashStorageAPI {
     }
     
     public byte[] getPassword(byte[] currentUrl) 
-    {
-    	Byte[] fixedUrl = Utils.convertByte(Utils.padZeros(currentUrl, NUM_BYTE));
-    	
+    {    	
     	Iterator<Byte[]> urlIter = urls.getIterator();
         Iterator<Byte[]> passIter = passwords.getIterator();
         
-        Byte[] url;
-        Byte[] pass;
-        
         while (urlIter.hasNext()) {
-            url = urlIter.getNext();
-            pass = passIter.getNext();
-            if(Utils.equals(url, fixedUrl))
+        	Byte[] url = urlIter.getNext();
+        	Byte[] pass = passIter.getNext();
+            if(Utils.equals(url, Utils.convertByte(currentUrl)))
                 return Utils.convertByte(pass);
         }
 
