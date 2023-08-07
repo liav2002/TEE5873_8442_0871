@@ -180,6 +180,11 @@ public class PasswordVaultApplet extends IntelApplet {
 	            		sendEmptyResponse(RES_NOT_REGISTERED);
 	            	}
 	            	
+	            	else if(isLoggedIn)
+	            	{
+	            		sendEmptyResponse(RES_FAILED);
+	            	}
+	            	
 	            	else if (fs.isValidPass(request))
 	            	{
 	            		isLoggedIn = true;
