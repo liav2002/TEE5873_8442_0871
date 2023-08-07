@@ -143,6 +143,47 @@ public class Utils {
     }
     
     /**
+     * Convert an integer to a 3 bytes array, the byte will represent ascci of digits.
+     *
+     * @param num The integer to convert to a byte array.
+     * @return The byte array representation of the integer.
+     */
+    public static byte[] convertIntTo3BytesArray(int a) {
+        byte[] result = new byte[3];
+        int digit1 = (a / 100) % 10;
+        int digit2 = (a / 10) % 10;
+        int digit3 = a % 10;
+        
+        result[0] = (byte) (digit1 + '0');
+        result[1] = (byte) (digit2 + '0');
+        result[2] = (byte) (digit3 + '0');
+        
+        return result;
+    }
+    
+    /**
+     * Converts a 3-byte array representing ASCII digits to an integer.
+     *
+     * This function takes a byte array containing three ASCII digits (0-9)
+     * and converts it into an integer. The resulting integer represents the
+     * value of the ASCII digits in the given byte array.
+     *
+     * @param a The byte array containing three ASCII digits (0-9).
+     * @return An integer representation of the value of the ASCII digits in the array.
+     * @throws ArrayIndexOutOfBoundsException If the input array does not contain exactly three elements.
+     * @throws NumberFormatException If any element in the input array is not a valid ASCII digit.
+     */
+    public static int convert3BytesArrayToInt(byte[] a) {
+        int digit1 = a[0] - '0';
+        int digit2 = a[1] - '0';
+        int digit3 = a[2] - '0';
+        
+        int result = (digit1 * 100) + (digit2 * 10) + digit3;
+        
+        return result;
+    }
+    
+    /**
      * Split data according spaces
      *
      * @param data The data to split.
