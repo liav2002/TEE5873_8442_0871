@@ -1,8 +1,9 @@
 export class WebSocketApi {
-    constructor() {
+    constructor(webSocketAddress) {
         this.socketToServer;
         this.MsgFromServer = "";
         this.isConnected = false;
+        this.initialize(webSocketAddress);
     }
 
     isInitialized() {

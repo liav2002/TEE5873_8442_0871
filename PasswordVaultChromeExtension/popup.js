@@ -20,7 +20,6 @@ const getPasswordButton = document.getElementById('button-get-password');
 const getUsernameButton = document.getElementById('button-get-username');
 const addDataButton = document.getElementById('button-add-data');
 const resetMemoryButton = document.getElementById('button-reset-memory');
-const connectToWebSocketButton = document.getElementById('button-connect-to-socket');
 const submitButton = document.getElementById('submit');
 
 // screen:
@@ -37,12 +36,10 @@ chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
 
 // objects:
 const popup = document.getElementById('popup');
-const websockethandler = new WebSocketApi();
 const socketName = "ws://127.0.0.1:5789/WS2Applet";
+const websockethandler = new WebSocketApi(socketName);
 
-// string messages:
-const alreadyConnected = "already connected to the Server!";
-const mustconnect = "you must first initialize the websocket!";
+const failed2connect = "ERROR: Failed connect to data api.";
 
 // websockethandler.initialize(socketName); //you can comment this out, and manually connect
 
@@ -50,7 +47,7 @@ const mustconnect = "you must first initialize the websocket!";
 
 registerButton.addEventListener('click', button => {
     if (websockethandler.isInitialized() === false) {
-        alert(mustconnect);
+        alert(failed2connect);
         return;
     }
 
@@ -70,7 +67,7 @@ registerButton.addEventListener('click', button => {
 
 signInButton.addEventListener('click', button => {
     if (websockethandler.isInitialized() === false) {
-        alert(mustconnect);
+        alert(failed2connect);
         return;
     }
     //must get text from screen!
@@ -80,7 +77,7 @@ signInButton.addEventListener('click', button => {
 
 getPasswordButton.addEventListener('click', button => {
     if (websockethandler.isInitialized() === false) {
-        alert(mustconnect);
+        alert(failed2connect);
         return;
     }
 
@@ -90,7 +87,7 @@ getPasswordButton.addEventListener('click', button => {
 
 getUsernameButton.addEventListener('click', button => {
     if (websockethandler.isInitialized() === false) {
-        alert(mustconnect);
+        alert(failed2connect);
         return;
     }
 
@@ -100,7 +97,7 @@ getUsernameButton.addEventListener('click', button => {
 
 addDataButton.addEventListener('click', button => {
     if (websockethandler.isInitialized() === false) {
-        alert(mustconnect);
+        alert(failed2connect);
         return;
     }
 
@@ -133,7 +130,7 @@ submitButton.addEventListener('click', () => {
 
 resetMemoryButton.addEventListener('click', button => {
     if (websockethandler.isInitialized() === false) {
-        alert(mustconnect);
+        alert(failed2connect);
         return;
     }
     websockethandler.sendMsgToServer(ServerOperation.RESET_MEMORY.name);
@@ -146,14 +143,6 @@ resetMemoryButton.addEventListener('click', button => {
     usernameScreenTextElement.textContent = "";
     passwordScreenTextElement.textContent = "";
 });
-
-connectToWebSocketButton.addEventListener('click', button => {
-    if (websockethandler.isInitialized() === true) {
-        alert(alreadyConnected);
-        return;
-    }
-    websockethandler.initialize(socketName);
-})
 
 // Show the popup when needed
 function showPopup() {
