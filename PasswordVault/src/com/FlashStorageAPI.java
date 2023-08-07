@@ -16,12 +16,7 @@ public class FlashStorageAPI {
 	LinkedList<Byte[]> usernames = LinkedList.create();
 	int triosCount = 0; //number of urls, passwords and usernames.
 	
-	//Constants values for char and bytes:
-    final static int BYTE_CHAR_RATIO = 1;
-    final static int NUM_CHAR = 20;
-    final static int NUM_BYTE = BYTE_CHAR_RATIO * NUM_CHAR;
-    final int SLOT_SIZE = NUM_BYTE * 3;
-    
+	//Constants for the protocol of get inside data
     final static int LEN_BYTES = 3;
 	
 	// This is a singleton pattern.

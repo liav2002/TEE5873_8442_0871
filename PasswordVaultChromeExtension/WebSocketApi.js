@@ -54,33 +54,25 @@ export class WebSocketApi {
             case ServerResult.RES_PASSWORD_MISSING.name:
             case ServerResult.RES_URL_EXISTS.name: {
                 const msgScreenTextElement = document.getElementById('data-msg-screen');
-                msgScreenTextElement.textContent = event.data.substring(lengthOfCommandId, (event.data).length);
+                msgScreenTextElement.textContent = event.data.substring(lengthOfCommandId);
             }
                 break;
             case ServerResult.RES_SUCCESS.name: {
                 const msgScreenTextElement = document.getElementById('data-msg-screen');
-                msgScreenTextElement.textContent = event.data.substring(lengthOfCommandId, (event.data).length);
+                msgScreenTextElement.textContent = event.data.substring(lengthOfCommandId);
                 if (this.isConnected === false) {
                     this.isConnected = true;
                 }
             }
                 break;
             case ServerResult.RES_PASSWORD_RETREIVED.name: {
-                const passwordFromServer = event.data.substring(lengthOfCommandId, dataLength + 1);
-                const msgScreenTextElement = document.getElementById('data-msg-screen');
                 const passwordScreenTextElement = document.getElementById('data-password-screen');
-
-                msgScreenTextElement.textContent = event.data.substring(dataLength + 1);
-                passwordScreenTextElement.textContent = passwordFromServer;
+                passwordScreenTextElement.textContent = event.data.substring(lengthOfCommandId);
             }
                 break;
             case ServerResult.RES_USERNAME_RETREIVEDR.name: {
-                const usernameFromServer = event.data.substring(lengthOfCommandId, dataLength + 1);
-                const msgScreenTextElement = document.getElementById('data-msg-screen');
                 const usernameScreenTextElement = document.getElementById('data-username-screen');
-
-                msgScreenTextElement.textContent = event.data.substring(dataLength + 1);
-                usernameScreenTextElement.textContent = usernameFromServer;
+                usernameScreenTextElement.textContent = event.data.substring(lengthOfCommandId);
             }
                 break;
 
