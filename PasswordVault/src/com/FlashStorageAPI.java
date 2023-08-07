@@ -55,9 +55,7 @@ public class FlashStorageAPI {
     	if(existsData()) {
             FlashStorage.eraseFlashData(DATA_CODE);
         }
-    	if(isRegistered()) {
-            FlashStorage.eraseFlashData(PASSWORD_CODE);
-        }
+    	
     	passwords = LinkedList.create();
     	urls = LinkedList.create();
     	usernames = LinkedList.create();
@@ -201,6 +199,11 @@ public class FlashStorageAPI {
     
     public void setPassword(byte[] pass) 
     {
+    	// make sure data password is clean.
+    	if(isRegistered())
+    	{
+        	FlashStorage.eraseFlashData(PASSWORD_CODE);
+    	}
         // write to the FlaseStorage the access password, the master key
         FlashStorage.writeFlashData(PASSWORD_CODE, pass, 0, pass.length);
     }
