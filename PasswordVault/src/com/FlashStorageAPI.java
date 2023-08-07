@@ -14,13 +14,14 @@ public class FlashStorageAPI {
 	LinkedList<Byte[]> passwords = LinkedList.create();
 	LinkedList<Byte[]> urls = LinkedList.create();
 	LinkedList<Byte[]> usernames = LinkedList.create();
-	int size = 0; //number of urls, passwords and usernames.
 	
 	//Constants values for char and bytes:
     final static int BYTE_CHAR_RATIO = 1;
     final static int NUM_CHAR = 20;
     final static int NUM_BYTE = BYTE_CHAR_RATIO * NUM_CHAR;
     final int SLOT_SIZE = NUM_BYTE * 3;
+    
+    final static int LEN_BYTES = 3;
 	
 	// This is a singleton pattern.
     private static FlashStorageAPI instance = null;
@@ -81,24 +82,39 @@ public class FlashStorageAPI {
     }
     
     public void loadData() {
+    	// DATA_STRUCTURE: NUM_OF_TRIOS[3 Bytes] | URL_SIZE [3 Bytes] | URL |USERNAME_SIZE[3 Bytes] | USERNAME | PASSWORD_SIZE [3 Bytes] | PASSWORD ...
     	byte[] data = new byte[FlashStorage.getFlashDataSize(DATA_CODE)];
-        FlashStorage.readFlashData(DATA_CODE, data, 0);
-
-        byte[] url;
-        byte[] username;
-        byte[] pass;
-
-        final int slot_size = SLOT_SIZE;
-        for (int i = 0; i < data.length; i += slot_size) {
-            // for every group of: url, username, password
-            url = Utils.sliceArray(data, i, i + NUM_BYTE);
-            username = Utils.sliceArray(data, i + NUM_BYTE, i + NUM_BYTE * 2);
-            pass = Utils.sliceArray(data, i + NUM_BYTE * 2, i + slot_size);
+        FlashStorage.readFlashData(DATA_CODE, data, 0);  
+        
+        int trioCount = Utils.byteArrayToInt(Utils.sliceArray(data, 0, LEN_BYTES));
+        int currentIndex = LEN_BYTES;
+        
+        for(int i = 0; i < trioCount; i++)
+        {
+        	int urlSize = Utils.byteArrayToInt(Utils.sliceArray(data, currentIndex, currentIndex + LEN_BYTES));
+        	currentIndex += LEN_BYTES;
+        	byte[] urlBytes = Utils.sliceArray(data, currentIndex, currentIndex + urlSize);
+        	currentIndex += urlSize;
+        	
+        	int usernameSize = Utils.byteArrayToInt(Utils.sliceArray(data, currentIndex, currentIndex + LEN_BYTES));
+        	currentIndex += LEN_BYTES;
+        	byte[] usernameBytes = Utils.sliceArray(data, currentIndex, currentIndex + usernameSize);
+        	currentIndex += usernameSize;
+        	
+        	int passwordSize = Utils.byteArrayToInt(Utils.sliceArray(data, currentIndex, currentIndex + LEN_BYTES));
+        	currentIndex += LEN_BYTES;
+        	byte[] passwordBytes = Utils.sliceArray(data, currentIndex, currentIndex + passwordSize);
+        	currentIndex += passwordSize;
+        	
+        	// Convert bytes to Byte objects
+            Byte[] url = Utils.convertByte(urlBytes);
+            Byte[] username = Utils.convertByte(usernameBytes);
+            Byte[] password = Utils.convertByte(passwordBytes);
             
-            urls.add(Utils.convertByte(url));
-            usernames.add(Utils.convertByte(username));
-            passwords.add(Utils.convertByte(pass));
-            size++;
+            // Add to LinkedLists
+            urls.add(url);
+            usernames.add(username);
+            passwords.add(password);
         }
     }
     
