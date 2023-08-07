@@ -51,17 +51,19 @@ registerButton.addEventListener('click', button => {
         return;
     }
 
-    if (confirm("Registering will erase any memory. Are you sure that you want to Register anyway?")) {
+    if (confirm("Are you sure you want to change your master password?")) {
         const textFromScreen = prompt("Please enter a new password:");
-        websockethandler.sendMsgToServer(ServerOperation.REGISTER.name + textFromScreen);
+        if (textFromScreen != null) {
+            websockethandler.sendMsgToServer(ServerOperation.REGISTER.name + textFromScreen);
 
-        const msgScreenTextElement = document.getElementById('data-msg-screen');
-        const usernameScreenTextElement = document.getElementById('data-username-screen');
-        const passwordScreenTextElement = document.getElementById('data-password-screen');
+            const msgScreenTextElement = document.getElementById('data-msg-screen');
+            const usernameScreenTextElement = document.getElementById('data-username-screen');
+            const passwordScreenTextElement = document.getElementById('data-password-screen');
 
-        msgScreenTextElement.textContent = "";
-        usernameScreenTextElement.textContent = "";
-        passwordScreenTextElement.textContent = "";
+            msgScreenTextElement.textContent = "";
+            usernameScreenTextElement.textContent = "";
+            passwordScreenTextElement.textContent = "";
+        }
     }
 });
 
@@ -72,7 +74,9 @@ signInButton.addEventListener('click', button => {
     }
     //must get text from screen!
     const textFromScreen = prompt("Please enter a password:");
-    websockethandler.sendMsgToServer(ServerOperation.SIGN_IN.name + textFromScreen);
+    if (textFromScreen != null) {
+        websockethandler.sendMsgToServer(ServerOperation.SIGN_IN.name + textFromScreen);
+    }
 });
 
 getPasswordButton.addEventListener('click', button => {

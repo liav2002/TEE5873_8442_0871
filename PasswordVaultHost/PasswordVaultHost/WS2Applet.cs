@@ -43,15 +43,13 @@ namespace PasswordVaultHost
                     PasswordVaultHost.Log.Debug_Log("WS2Applet on 'REGISTER' operation.");
                     try
                     {
-                        itsAppletAPI.ResetMemory();
                         int responseCode = itsAppletAPI.Register(data);
                         if (responseCode == (int)AppletResult.RES_SUCCESS)
-                            send2Client(ServerResult.RES_SUCCESS, "successfully registered.");
+                            send2Client(ServerResult.RES_SUCCESS, "master key successfully changed.");
                     }
-                    catch (ERROR_ResetMemoryFailed ex)
+                    catch (ERROR_Already_Registered ex)
                     {
-                        PasswordVaultHost.Log.Error_LOG(ex.msg);
-                        send2Client(ServerResult.RES_NOT_SIGNED_IN, "It is not possible to register because there is already a registered user.");
+                        send2Client(ServerResult.RES_NOT_SIGNED_IN, ex.msg);
                     }
 
                     break;
@@ -133,6 +131,7 @@ namespace PasswordVaultHost
                     catch (ERROR_ResetMemoryFailed ex)
                     {
                         PasswordVaultHost.Log.Error_LOG(ex.msg);
+                        send2Client(ServerResult.RES_FAILED, ex.msg);
                     }
                     break;
                 }

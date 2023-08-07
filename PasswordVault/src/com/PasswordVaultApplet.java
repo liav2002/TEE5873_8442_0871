@@ -72,7 +72,7 @@ public class PasswordVaultApplet extends IntelApplet {
             switch (commandId) {
 	            case RESET_MEMORY:
 	            {
-	            	if (!fs.isRegistered() || isLoggedIn)
+	            	if (isLoggedIn)
 	            	{
 	            		fs.resetData();
 	            		sendEmptyResponse(RES_SUCCESS);
@@ -201,9 +201,16 @@ public class PasswordVaultApplet extends IntelApplet {
 	            	
 	            case REGISTER:
 	            {
-	            	fs.setPassword(request);
-	            	isLoggedIn = true;
-	            	sendEmptyResponse(RES_SUCCESS);
+	            	if(fs.isRegistered() && !isLoggedIn)
+	            	{
+	            		sendEmptyResponse(RES_FAILED);
+	            	}
+	            	else
+	            	{
+	            		fs.setPassword(request);
+		            	isLoggedIn = true;
+		            	sendEmptyResponse(RES_SUCCESS);
+	            	}
 	            	break;
 	            }
 	            

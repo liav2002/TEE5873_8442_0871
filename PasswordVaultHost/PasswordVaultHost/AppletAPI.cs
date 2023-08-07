@@ -234,7 +234,12 @@ namespace PasswordVaultHost
 
             // log response messages
             if (responseCode == (int)AppletResult.RES_SUCCESS)
-                Log.Default_LOG("User successfully registered.");
+                Log.Default_LOG("User successfully change master key.");
+            else if (responseCode == (int)AppletResult.RES_FAILED)
+            {
+                Log.Error_LOG("Try to change master key before authentication.");
+                throw new ERROR_Already_Registered();
+            }
             else
                 Log.Error_LOG("'Register' Operation failed with code: " + responseCode.ToString());
 

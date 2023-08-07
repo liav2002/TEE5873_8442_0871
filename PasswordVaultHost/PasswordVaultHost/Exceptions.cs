@@ -26,7 +26,7 @@ namespace PasswordVaultHost
     { 
         public ERROR_ResetMemoryFailed()
         {
-            msg = "Reset memory failed - you should see log messages.";
+            msg = "Can't reset memory before authentication.";
         }
     }
     class ERROR_Unknown : AppletException
@@ -63,6 +63,14 @@ namespace PasswordVaultHost
         public ERROR_Url_Exists()
         {
             msg = "Url is already exists in data. (In this version updating data is not allowed).";
+        }
+    }
+
+    class ERROR_Already_Registered : AppletException
+    {
+        public ERROR_Already_Registered()
+        {
+            msg = "You already set master key.";
         }
     }
 
