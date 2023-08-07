@@ -183,13 +183,9 @@ public class FlashStorageAPI {
 
     public void addData(byte[] url, byte[] username, byte[] password)
     {
-    	byte[] fixedUrl = Utils.padZeros(url, NUM_BYTE);
-    	byte[] fixedUsername = Utils.padZeros(username, NUM_BYTE);
-    	byte[] fixedPassword = Utils.padZeros(password, NUM_BYTE);
-
-    	urls.add(Utils.convertByte(fixedUrl));
-    	usernames.add(Utils.convertByte(fixedUsername));
-        passwords.add(Utils.convertByte(fixedPassword));
+    	urls.add(Utils.convertByte(url));
+    	usernames.add(Utils.convertByte(username));
+        passwords.add(Utils.convertByte(password));
         triosCount++;
 
         saveData();
