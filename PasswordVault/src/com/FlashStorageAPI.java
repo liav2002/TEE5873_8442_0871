@@ -221,18 +221,13 @@ public class FlashStorageAPI {
     
     public byte[] getUsername(byte[] currentUrl)
     {
-    	Byte[] fixedUrl = Utils.convertByte(Utils.padZeros(currentUrl, NUM_BYTE));
-    	
     	Iterator<Byte[]> urlIter = urls.getIterator();
         Iterator<Byte[]> usernameIter = usernames.getIterator();
         
-        Byte[] url;
-        Byte[] username;
-        
         while (urlIter.hasNext()) {
-            url = urlIter.getNext();
-            username = usernameIter.getNext();
-            if(Utils.equals(url, fixedUrl))
+            Byte[] url = urlIter.getNext();
+            Byte[] username = usernameIter.getNext();
+            if(Utils.equals(url, Utils.convertByte(currentUrl)))
                 return Utils.convertByte(username);
         }
 
