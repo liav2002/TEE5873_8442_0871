@@ -193,13 +193,11 @@ public class FlashStorageAPI {
     
     public boolean isUrlExistsForUsername(byte[] currentUrl)
     {
-    	Byte[] fixedUrl = Utils.convertByte(Utils.padZeros(currentUrl, NUM_BYTE));
     	Iterator<Byte[]> urlIter = urls.getIterator();
-    	Byte[] url;
     	
     	while (urlIter.hasNext()) {
-            url = urlIter.getNext();
-            if(Utils.equals(url, fixedUrl))
+    		Byte[] url = urlIter.getNext();
+            if(Utils.equals(url, Utils.convertByte(currentUrl)))
                 return true;
         }
     	
