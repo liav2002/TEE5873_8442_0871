@@ -62,13 +62,15 @@ namespace PasswordVaultHost
                     PasswordVaultHost.Log.Debug_Log("WS2Applet on 'SIGN_IN' operation.");
                     int responseCode = itsAppletAPI.SignIn(data);
                     if (responseCode == (int)AppletResult.RES_WRONG_PASSWORD)
-                        send2Client(ServerResult.RES_WRONG_PASSWORD, "wrong password");
+                        send2Client(ServerResult.RES_WRONG_PASSWORD, "Wrong password");
                     else if (responseCode == (int)AppletResult.RES_NOT_REGISTERED)
-                        send2Client(ServerResult.RES_NOT_REGISTERED, "user not registered.");
+                        send2Client(ServerResult.RES_NOT_REGISTERED, "User not registered.");
+                    else if (responseCode == (int)AppletResult.RES_FAILED)
+                        send2Client(ServerResult.RES_FAILED, "User already signed in.");
                     else if (responseCode == (int)AppletResult.RES_SUCCESS)
-                        send2Client(ServerResult.RES_SUCCESS, "successfully signed in.");
+                        send2Client(ServerResult.RES_SUCCESS, "Successfully signed in.");
                     else
-                        send2Client(ServerResult.RES_FAILED, "unknown error.");
+                        send2Client(ServerResult.RES_FAILED, "Unknown error.");
                     break;
                 }
 

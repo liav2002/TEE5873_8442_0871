@@ -14,13 +14,10 @@ public class FlashStorageAPI {
 	LinkedList<Byte[]> passwords = LinkedList.create();
 	LinkedList<Byte[]> urls = LinkedList.create();
 	LinkedList<Byte[]> usernames = LinkedList.create();
-	int size = 0; //number of urls, passwords and usernames.
+	int triosCount = 0; //number of urls, passwords and usernames.
 	
-	//Constants values for char and bytes:
-    final static int BYTE_CHAR_RATIO = 1;
-    final static int NUM_CHAR = 20;
-    final static int NUM_BYTE = BYTE_CHAR_RATIO * NUM_CHAR;
-    final int SLOT_SIZE = NUM_BYTE * 3;
+	//Constants for the protocol of get inside data
+    final static int LEN_BYTES = 3;
 	
 	// This is a singleton pattern.
     private static FlashStorageAPI instance = null;
@@ -55,13 +52,11 @@ public class FlashStorageAPI {
     	if(existsData()) {
             FlashStorage.eraseFlashData(DATA_CODE);
         }
-    	if(isRegistered()) {
-            FlashStorage.eraseFlashData(PASSWORD_CODE);
-        }
+    	
     	passwords = LinkedList.create();
     	urls = LinkedList.create();
     	usernames = LinkedList.create();
-    	size = 0;
+    	triosCount = 0;
     }
     
     /**
@@ -83,69 +78,121 @@ public class FlashStorageAPI {
     }
     
     public void loadData() {
+    	// DATA_STRUCTURE: NUM_OF_TRIOS[3 Bytes] | URL_SIZE [3 Bytes] | URL |USERNAME_SIZE[3 Bytes] | USERNAME | PASSWORD_SIZE [3 Bytes] | PASSWORD ...
     	byte[] data = new byte[FlashStorage.getFlashDataSize(DATA_CODE)];
-        FlashStorage.readFlashData(DATA_CODE, data, 0);
-
-        byte[] url;
-        byte[] username;
-        byte[] pass;
-
-        final int slot_size = SLOT_SIZE;
-        for (int i = 0; i < data.length; i += slot_size) {
-            // for every group of: url, username, password
-            url = Utils.sliceArray(data, i, i + NUM_BYTE);
-            username = Utils.sliceArray(data, i + NUM_BYTE, i + NUM_BYTE * 2);
-            pass = Utils.sliceArray(data, i + NUM_BYTE * 2, i + slot_size);
+        FlashStorage.readFlashData(DATA_CODE, data, 0);  
+        
+        triosCount = Utils.convert3BytesArrayToInt((Utils.sliceArray(data, 0, LEN_BYTES)));
+        int currentIndex = LEN_BYTES;
+        
+        for(int i = 0; i < triosCount; i++)
+        {
+        	int urlSize = Utils.convert3BytesArrayToInt(Utils.sliceArray(data, currentIndex, currentIndex + LEN_BYTES));
+        	currentIndex += LEN_BYTES;
+        	byte[] urlBytes = Utils.sliceArray(data, currentIndex, currentIndex + urlSize);
+        	currentIndex += urlSize;
+        	
+        	int usernameSize = Utils.convert3BytesArrayToInt(Utils.sliceArray(data, currentIndex, currentIndex + LEN_BYTES));
+        	currentIndex += LEN_BYTES;
+        	byte[] usernameBytes = Utils.sliceArray(data, currentIndex, currentIndex + usernameSize);
+        	currentIndex += usernameSize;
+        	
+        	int passwordSize = Utils.convert3BytesArrayToInt(Utils.sliceArray(data, currentIndex, currentIndex + LEN_BYTES));
+        	currentIndex += LEN_BYTES;
+        	byte[] passwordBytes = Utils.sliceArray(data, currentIndex, currentIndex + passwordSize);
+        	currentIndex += passwordSize;
+        	
+        	// Convert bytes to Byte objects
+            Byte[] url = Utils.convertByte(urlBytes);
+            Byte[] username = Utils.convertByte(usernameBytes);
+            Byte[] password = Utils.convertByte(passwordBytes);
             
-            urls.add(Utils.convertByte(url));
-            usernames.add(Utils.convertByte(username));
-            passwords.add(Utils.convertByte(pass));
-            size++;
+            // Add to LinkedLists
+            urls.add(url);
+            usernames.add(username);
+            passwords.add(password);
         }
     }
     
-    public void saveData() {
-    	Iterator<Byte[]> urlIter = urls.getIterator();
-    	Iterator<Byte[]> usernameIter = usernames.getIterator();
-        Iterator<Byte[]> passIter = passwords.getIterator();
+    public void saveData() {    	
+    	// First, calculate number of bytes to write.
+    	int totalDataSize = LEN_BYTES; // initialized for first 3 bytes of numberOfTrios.
+    	
+    	// Calculate the size for URL, Username, and Password data
+        Iterator<Byte[]> urlIterator = urls.getIterator();
+        Iterator<Byte[]> usernameIterator = usernames.getIterator();
+        Iterator<Byte[]> passwordIterator = passwords.getIterator();
+        
+        while (urlIterator.hasNext() && usernameIterator.hasNext() && passwordIterator.hasNext()) {
+            Byte[] url = urlIterator.getNext();
+            Byte[] username = usernameIterator.getNext();
+            Byte[] password = passwordIterator.getNext();
 
-        Byte[] dataToSave = new Byte[size * SLOT_SIZE];
-
-        int i = 0;
-
-        while (urlIter.hasNext()) {
-            Utils.place(dataToSave, urlIter.getNext(), i * SLOT_SIZE);
-            Utils.place(dataToSave, usernameIter.getNext(), i * SLOT_SIZE + NUM_BYTE);
-            Utils.place(dataToSave, passIter.getNext(), i * SLOT_SIZE + NUM_BYTE * 2);
-            i++;
+            totalDataSize += 3 + url.length + 3 + username.length + 3 + password.length;
         }
+        
+        // Then, create the byte array represent data to write.
+        Byte[] data2save = new Byte[totalDataSize];
+        int currentIndex = 0;
+        
+        // Write triosCount
+        Byte[] triosCountBytes = Utils.convertByte(Utils.convertIntTo3BytesArray(triosCount));
+        Utils.place(data2save, triosCountBytes, currentIndex);
+        currentIndex += LEN_BYTES;
+        
+        // Write URL, Username, and Password data
+        urlIterator = urls.getIterator();
+        usernameIterator = usernames.getIterator();
+        passwordIterator = passwords.getIterator();
+        
+        while (urlIterator.hasNext() && usernameIterator.hasNext() && passwordIterator.hasNext()) {
+            Byte[] url = urlIterator.getNext();
+            Byte[] username = usernameIterator.getNext();
+            Byte[] password = passwordIterator.getNext();
 
-        FlashStorage.writeFlashData(DATA_CODE, Utils.convertByte(dataToSave), 0, dataToSave.length);
+            // Write URL
+            Byte[] urlSizeBytes = Utils.convertByte(Utils.convertIntTo3BytesArray(url.length));
+            Utils.place(data2save, urlSizeBytes, currentIndex);
+            currentIndex += LEN_BYTES;
+            Utils.place(data2save, url, currentIndex);
+            currentIndex += url.length;
+
+            // Write Username
+            Byte[] usernameSizeBytes = Utils.convertByte(Utils.convertIntTo3BytesArray(username.length));
+            Utils.place(data2save, usernameSizeBytes, currentIndex);
+            currentIndex += LEN_BYTES;
+            Utils.place(data2save, username, currentIndex);
+            currentIndex += username.length;
+
+            // Write Password
+            Byte[] passwordSizeBytes = Utils.convertByte(Utils.convertIntTo3BytesArray(password.length));
+            Utils.place(data2save, passwordSizeBytes, currentIndex);
+            currentIndex += LEN_BYTES;
+            Utils.place(data2save, password, currentIndex);
+            currentIndex += password.length;
+        }
+        
+        // Finally, write to flash storage data.
+        FlashStorage.writeFlashData(DATA_CODE, Utils.convertByte(data2save), 0, data2save.length);
     }
 
     public void addData(byte[] url, byte[] username, byte[] password)
     {
-    	byte[] fixedUrl = Utils.padZeros(url, NUM_BYTE);
-    	byte[] fixedUsername = Utils.padZeros(username, NUM_BYTE);
-    	byte[] fixedPassword = Utils.padZeros(password, NUM_BYTE);
-
-    	urls.add(Utils.convertByte(fixedUrl));
-    	usernames.add(Utils.convertByte(fixedUsername));
-        passwords.add(Utils.convertByte(fixedPassword));
-        size++;
+    	urls.add(Utils.convertByte(url));
+    	usernames.add(Utils.convertByte(username));
+        passwords.add(Utils.convertByte(password));
+        triosCount++;
 
         saveData();
     }
     
     public boolean isUrlExistsForUsername(byte[] currentUrl)
     {
-    	Byte[] fixedUrl = Utils.convertByte(Utils.padZeros(currentUrl, NUM_BYTE));
     	Iterator<Byte[]> urlIter = urls.getIterator();
-    	Byte[] url;
     	
     	while (urlIter.hasNext()) {
-            url = urlIter.getNext();
-            if(Utils.equals(url, fixedUrl))
+    		Byte[] url = urlIter.getNext();
+            if(Utils.equals(url, Utils.convertByte(currentUrl)))
                 return true;
         }
     	
@@ -153,19 +200,14 @@ public class FlashStorageAPI {
     }
     
     public byte[] getPassword(byte[] currentUrl) 
-    {
-    	Byte[] fixedUrl = Utils.convertByte(Utils.padZeros(currentUrl, NUM_BYTE));
-    	
+    {    	
     	Iterator<Byte[]> urlIter = urls.getIterator();
         Iterator<Byte[]> passIter = passwords.getIterator();
         
-        Byte[] url;
-        Byte[] pass;
-        
         while (urlIter.hasNext()) {
-            url = urlIter.getNext();
-            pass = passIter.getNext();
-            if(Utils.equals(url, fixedUrl))
+        	Byte[] url = urlIter.getNext();
+        	Byte[] pass = passIter.getNext();
+            if(Utils.equals(url, Utils.convertByte(currentUrl)))
                 return Utils.convertByte(pass);
         }
 
@@ -174,18 +216,13 @@ public class FlashStorageAPI {
     
     public byte[] getUsername(byte[] currentUrl)
     {
-    	Byte[] fixedUrl = Utils.convertByte(Utils.padZeros(currentUrl, NUM_BYTE));
-    	
     	Iterator<Byte[]> urlIter = urls.getIterator();
         Iterator<Byte[]> usernameIter = usernames.getIterator();
         
-        Byte[] url;
-        Byte[] username;
-        
         while (urlIter.hasNext()) {
-            url = urlIter.getNext();
-            username = usernameIter.getNext();
-            if(Utils.equals(url, fixedUrl))
+            Byte[] url = urlIter.getNext();
+            Byte[] username = usernameIter.getNext();
+            if(Utils.equals(url, Utils.convertByte(currentUrl)))
                 return Utils.convertByte(username);
         }
 
@@ -201,6 +238,11 @@ public class FlashStorageAPI {
     
     public void setPassword(byte[] pass) 
     {
+    	// make sure data password is clean.
+    	if(isRegistered())
+    	{
+        	FlashStorage.eraseFlashData(PASSWORD_CODE);
+    	}
         // write to the FlaseStorage the access password, the master key
         FlashStorage.writeFlashData(PASSWORD_CODE, pass, 0, pass.length);
     }
